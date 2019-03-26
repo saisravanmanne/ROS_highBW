@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<launch>
+
+
+   <node name="master_discovery" pkg="master_discovery_fkie" type="master_discovery" output="screen">
+           <param name="mcast_group" value="224.0.0.1" />
+    </node>
+    <node name="master_sync" pkg="master_sync_fkie" type="master_sync" output="screen"> -->
+            # Ignore all hosts by default 
+            <!-- <rosparam param="ignore_hosts">['*']</rosparam> -->
+            # Add selective hosts to sync with 
+            <!-- <rosparam param="sync_hosts">[192.168.0.100]</rosparam> -->
+            # Ignore particular nodes 
+	    <rosparam param="sync_nodes">['/vive_data_send'] </rosparam>
+            <!-- <rosparam param="ignore_nodes">['/robot_0/amcl','/robot_0/diff_tf_joystick','/robot_0/    		    map_server','/robot_0/rplidarNode','/robot_0/base_link_to_laser','/robot_0/joy_node
+	    ','/robot_0/rosserial_lipo'] </rosparam> -->
+            # Sync just selected topics 
+            <rosparam param="sync_topics"> ['/cmd_vel','/tracker_2'] </rosparam> 
+    </node>
+  
+  <!--  <node pkg="rosserial_arduino" name="serial" type="serial_node.py">
+    <param name="~port" value="/dev/ttyACM0"/>
+    <param name="~baudrate" value="57600"/>
+    </node>  -->
+ 
+    <node pkg="joy" name="joy" type="joy_node">
+    </node>
+
+   <node pkg="highBW" name="ground_station_innerLoop2" type="ground_station_innerLoop2">
+   </node>
+
+   <node pkg="highBW" name="ground_station_data_receive_Vive2" type="ground_station_data_receive_Vive2">
+   </node>
+
+ </launch>
+
+
+<!--<node pkg="turtlesim" name="mimic" type="mimic">
+     <remap from="input" to="turtlesim1/turtle1"/>
+     <remap from="output" to="turtlesim2/turtle1"/>
+   </node>   -->
+
+<!--<include file="$(find package_name)/directory/another.launch"/> -->
