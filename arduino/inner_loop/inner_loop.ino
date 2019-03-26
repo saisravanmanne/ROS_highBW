@@ -43,7 +43,7 @@ void twist_message_cmd(const geometry_msgs::Twist& msg)
   //vd = msg.linear.x  ;
   //wd = -msg.angular.z ;
   m1 = msg.linear.x  ;
-  m2 = msg.angular.z ;
+  m2 = msg.angular.x ;
   
 }
 

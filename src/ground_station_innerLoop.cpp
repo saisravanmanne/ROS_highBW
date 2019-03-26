@@ -15,7 +15,7 @@
 #include <fstream>
  
 int j_check = 0;
-int buffer_length = 10;
+int buffer_length = 30;
 std::deque<double> filterbuffer_v(buffer_length,0.0);
 std::deque<double> filterbuffer_w(buffer_length,0.0);
 
@@ -60,7 +60,7 @@ void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
 		pre_msg.x = msg->x;
 		pre_msg.y = msg->y;
 		pre_time = time;
-		if (vel.linear.y < 0.004)
+		if (vel.linear.y < 0.01)
 		vel.linear.y = 0;		
 		//pub.publish(vel);		
 
@@ -78,7 +78,7 @@ void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
 		filterbuffer_w.pop_back();
 		pre_msg.z = msg->z;
 		pre_time2 = time;
-		if (std::abs(vel.angular.y) < 0.004)
+		if (std::abs(vel.angular.y) < 0.04)
 		vel.angular.y = 0;
 		pub.publish(vel);
 		}	
