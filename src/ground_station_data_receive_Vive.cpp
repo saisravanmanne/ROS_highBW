@@ -63,7 +63,8 @@ class readData{
  	 std::ofstream myfile;
          ROS_INFO("printing data");
 	 myfile.open(filename.c_str(), std::ios::app);
-         myfile << " Linear_velocity " << msg->linear.y << " Angular_velocity " << msg->angular.y  << "\n";
+         myfile << "Linear_velocity " << msg->linear.y << " Angular_velocity " << msg->angular.y;
+         myfile << " Ref_linear_velocity " << msg->linear.x << " Ref_angular_velocity " << msg->angular.x  << "\n";
 	 myfile.close(); 
 	 //return 0; 
 }

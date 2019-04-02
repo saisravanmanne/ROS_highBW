@@ -42,8 +42,8 @@ readData::readData(){
 	sub = n.subscribe<geometry_msgs::Point>("/tracker_2", 1, &readData::callBack,this);
 	pub = n.advertise<geometry_msgs::Twist>("cmd_vel",1);
 	sub2 = n.subscribe<sensor_msgs::Joy>("/joy", 1, &readData::callBack2,this); 
-	vel.linear.z = 0.0046;  //Kp
-	vel.angular.z = 51.4398; //Ki
+	vel.linear.z = 4.1;  //Kp  //k
+	vel.angular.z = 0.0005; //Ki     //z
 	}
 
 void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
@@ -60,7 +60,7 @@ void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
 		pre_msg.x = msg->x;
 		pre_msg.y = msg->y;
 		pre_time = time;
-		if (vel.linear.y < 0.01)
+		if (vel.linear.y < 0.015)
 		vel.linear.y = 0;		
 		//pub.publish(vel);		
 
@@ -78,7 +78,7 @@ void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
 		filterbuffer_w.pop_back();
 		pre_msg.z = msg->z;
 		pre_time2 = time;
-		if (std::abs(vel.angular.y) < 0.04)
+		if (std::abs(vel.angular.y) < 0.01)
 		vel.angular.y = 0;
 		pub.publish(vel);
 		}	
@@ -88,8 +88,8 @@ void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
 }
 
 void readData::callBack2(const sensor_msgs::Joy::ConstPtr& joy){
-	vel.linear.x = -((joy->axes[1]*400)+(joy->axes[2]*400));//std::abs((msg->axes[1]*0.8));
-	vel.angular.x = -(-(joy->axes[2]*400)+(joy->axes[1]*400));//msg->axes[2]*1.5;
+	vel.linear.x = std::abs((joy->buttons[11]*1.5));//-((joy->axes[1]*400)+(joy->axes[2]*400));
+	vel.angular.x = joy->buttons[8]*1 - joy->buttons[9]*1 ;//-(-(joy->axes[2]*400)+(joy->axes[1]*400));//msg->axes[2]*1.5;
 	pub.publish(vel);   	
 }
 

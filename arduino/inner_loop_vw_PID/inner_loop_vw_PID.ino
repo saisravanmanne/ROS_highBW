@@ -15,7 +15,7 @@
 
 unsigned long Time=0; // Starting time
 unsigned long lastMilli = 0; 
-double td = 0.01; // T = 0.01 sec (100 hz)
+double td = 0.001; // T = 0.01 sec (100 hz)
 unsigned long sample_time= td*1000 ; 
 
 double wd ;    // Desired angular speed of COM about ICC(Instantaneous center of curvature)
@@ -57,10 +57,12 @@ double Lerror;   // Lerror = wlf(output of prefilter/ reference speed) - wLn....
 double Lerror_p = 0; // Controller input x_{n+1}
 double Lerror_pp = 0; // Controller input x_{n}
 double Lerror_ppp = 0;
+double Lk = 0;
 double Rerror;   // Rerror = wrf(output of prefilter/ reference speed) - wRn....or.....Controller input x_{n+2}
 double Rerror_p = 0; // Controller input x_{n+1}
 double Rerror_pp = 0; // Controller input x_{n}
 double Rerror_ppp = 0;
+double Rk = 0;
 
 double Lx = 0; // left - integrator anti-windup
 double Rx = 0; // right - integrator anti-windup
@@ -71,8 +73,9 @@ int PWML; // Controller output for left motor
 double A ;          // Controller gain kp of K = (kp + ki/s) * (100/(s+100))
 double B ;          // Controller gain ki 
 double C ;          // Controller gain kp of K = (kp + ki/s) * (100/(s+100))
+double Kp = 0.5; double Ki; double Kd;
 double ta = 1/1260;
-double Po = 1;
+double Po = 0;
 double g; double z;         // Controller gain ki 
 double alpha = 200;  // Roll off parameter alpha 
 double h ;    //  prefilter parameter z = ki/kp obtained from K = (g(s+z)/s)*(100/(s+100)) 
@@ -90,10 +93,12 @@ void twist_message_cmd(const geometry_msgs::Twist& msg)
   wdf = msg.angular.y ;
   g = msg.linear.z;
   z = msg.angular.z;
-  A = ((2*g*z) - (ta*g*z*z))/ta ;
-  B = g*z*z*td ;
-  C = (g*(z*ta - 1)*(z*ta - 1))/ta ;
-  Po = 1 ;
+  Kp = g;
+  Kd = z;
+  A = Kp + Ki*td/2 + Kd/td; //((2*g*z) - (g*z*z/1260)) ;
+  B = -Kp + Ki*td/2 - 2*Kd/td; //g*z*z ;
+  C = Kd/td; //(g*sq(z/1260 - 1))*1260 ; 
+  Po = 0 ;
   //h = ki/kp;
 }
 
@@ -183,14 +188,12 @@ void loop() {
 
 void publish_data(){  // currently not being used 
 
-
-  
   rpm_msg.linear.x = CR;//left_ticks;
   rpm_msg.linear.y = CL;
-  rpm_msg.linear.z = CL_p*(3 + Po) + CL_pp*(-3 -3*Po) + CL_ppp*(1 + 3*Po) + CL_pppp*(-Po) ;
-  rpm_msg.angular.x = Lerror_p*(A+C) + Lerror_pp*(-A*Po -A + B - 2*C) + Lerror_ppp*(A*Po - B*Po + C);
-  rpm_msg.angular.y = wRn;//md.getM2CurrentMilliamps();
-  rpm_msg.angular.z = wLn;//md.getM1CurrentMilliamps();
+  rpm_msg.linear.z = PWMR;
+  rpm_msg.angular.x = PWML;
+  rpm_msg.angular.y = C;//wRn;//md.getM2CurrentMilliamps();
+  rpm_msg.angular.z = g;//md.getM1CurrentMilliamps();
   pub.publish(&rpm_msg);
   //Serial.println(Time);*/
 
@@ -226,19 +229,31 @@ void Update_Motors(double vd, double wd)
   // I saw in the trial runs that if I don't use prefilter, the movement is very jerky !! So always use prefilter.    
   Rerror = wdr - wRn ; // error (ref - present)
   Lerror = wdl - wLn ; // error (ref - present)
-  if (abs(Rerror) < 0.05)
-    Rerror = 0;
-  if (abs(Lerror) < 0.05)
-    Lerror = 0;
+
   // Inner loop controller PID
-Lx = CL_p*(3 + Po) + CL_pp*(-3 -3*Po) + CL_ppp*(1 + 3*Po) + CL_pppp*(-Po);
-Rx = CR_p*(3 + Po) + CR_pp*(-3 -3*Po) + CR_ppp*(1 + 3*Po) + CR_pppp*(-Po);
-CL = Lx - (Lerror_p*(A+C) + Lerror_pp*(-A*Po -A + B - 2*C) + Lerror_ppp*(A*Po - B*Po + C));  
-CR = Rx - (Rerror_p*(A+C) + Rerror_pp*(-A*Po -A + B - 2*C) + Rerror_ppp*(A*Po - B*Po + C));  
+//Lx = CL_p*(3 + Po) + CL_pp*(-3 -3*Po) + CL_ppp*(1 + 3*Po); //+ CL_pppp*(-Po);
+//Rx = CR_p*(3 + Po) + CR_pp*(-3 -3*Po) + CR_ppp*(1 + 3*Po); //+ CR_pppp*(-Po);
+CL = CL_p + A*Lerror + B*Lerror_p + C*Lerror_pp;
+// = A*Lerror + B*(Lk) + C*(Lerror-Lerror_p);
+//= Lx - (Lerror_p*(A+C) + Lerror_pp*(-A*Po -A + B - 2*C) + Lerror_ppp*(A*Po - B*Po + C));  
+// 
+CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
+// = A*Rerror + B*(Rk) + C*(Rerror-Rerror_p); 
+//= Rx - (Rerror_p*(A+C) + Rerror_pp*(-A*Po -A + B - 2*C) + Rerror_ppp*(A*Po - B*Po + C));  
+//
 
 // PI controller no rolloff
 //  CL = (CL_p + A*c1*Lerror + A*c0*Lerror_p);  
 //  CR = (CR_p + A*c1*Rerror + A*c0*Rerror_p);
+
+  //Lk = Lk + Lerror; 
+  //Rk = Rk + Rerror;
+
+  //Lk = min(max(Lk,0),350/B);
+  //Rk = min(max(Rk,0),350/B);
+  Lk = max(Lk,abs(CL));
+  Rk = max(Rk,abs(CR));
+  
   CL_pppp = CL_ppp;
   CL_ppp = CL_pp;
   CL_pp = CL_p;
@@ -247,20 +262,20 @@ CR = Rx - (Rerror_p*(A+C) + Rerror_pp*(-A*Po -A + B - 2*C) + Rerror_ppp*(A*Po - 
   CR_ppp = CR_pp;
   CR_pp = CR_p;
 
-  Lerror_ppp = Lerror_pp;  
+  Lerror_ppp = Lerror_pp;
   Lerror_pp = Lerror_p;
   Lerror_p = Lerror;
-  Rerror_ppp = Rerror_ppp;
+  Rerror_ppp = Rerror_pp;
   Rerror_pp = Rerror_p;
   Rerror_p = Rerror; 
-
-  PWMR = CR ;//int(255.0*CR/5.15);  // CHANGE THIS !!
-  PWML = CL ;//int(255.0*CL/5.15);  // CHANGE THIS !!
+  
+  PWMR = CR*400/102 ;//int(255.0*CR/5.15);  // CHANGE THIS !!
+  PWML = CL*400/102 ;//int(255.0*CL/5.15);  // CHANGE THIS !!
 
   // Saturating input commands to right motor   
- if (PWMR>=300) 
+ if (PWMR>=400) 
   {  
-    PWMR=300;
+    PWMR=400;
   } 
   else if (PWMR<=0) 
   {
@@ -268,17 +283,17 @@ CR = Rx - (Rerror_p*(A+C) + Rerror_pp*(-A*Po -A + B - 2*C) + Rerror_ppp*(A*Po - 
   }
   
   // Saturating input commands to left motor
-  if (PWML>=300) 
+  if (PWML>=400) 
   {
-    PWML=300 ;
+    PWML=400 ;
   }
   else if (PWML<=0) 
   {
     PWML=0 ;
   }   
 
-  CL_p = PWML;
-  CR_p = PWMR;
+  CL_p = CL;//PWML;
+  CR_p = CR;//PWMR;
   // Running the motors
   md.setM1Speed(-PWMR*emergency) ; // PWML 
   md.setM2Speed(-PWML*emergency) ; // PWMR

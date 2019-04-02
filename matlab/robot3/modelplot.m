@@ -17,16 +17,19 @@ killerKb = csv2table('data.csv',l1,l2);
 
 velocity = table2array(killerKb(:,2));
 ang_velocity = table2array(killerKb(:,4));
-
+ref_velocity = table2array(killerKb(:,6));
+ref_ang_velocity = table2array(killerKb(:,8));
 %% plot the step response
 figure;
 plot(l1:l2,velocity,'r');
 xlabel({'Time','in milli-seconds (ms)'})
-ylabel({'Angular Velocity; Linear Velocity','in (radians/sec)'})
+ylabel({'Angular Velocity (in rad/s) Linear Velocity (in m/s)'})
 title('Robot1 charateristics')
 hold on;
 plot(l1:l2,ang_velocity)
-legend('Linear_velocity','Angular_velocity');
+plot(l1:l2,ref_velocity)
+plot(l1:l2,ref_ang_velocity)
+legend('Linear_velocity','Angular_velocity','Reference_Linear_Velocity','Reference_angular_velocity');
 
 
 
