@@ -9,13 +9,14 @@
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Int8.h>
+#include <std_msgs/Float64MultiArray.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
 unsigned long Time=0; // Starting time
 unsigned long lastMilli = 0; 
-double td = 0.001; // T = 0.01 sec (100 hz)
+double td = 0.01; // T = 0.01 sec (100 hz)
 unsigned long sample_time= td*1000 ; 
 
 double wd ;    // Desired angular speed of COM about ICC(Instantaneous center of curvature)
@@ -73,10 +74,10 @@ int PWML; // Controller output for left motor
 double A ;          // Controller gain kp of K = (kp + ki/s) * (100/(s+100))
 double B ;          // Controller gain ki 
 double C ;          // Controller gain kp of K = (kp + ki/s) * (100/(s+100))
-double Kp = 0.5; double Ki; double Kd;
+double Kp ; double Ki; double Kd;
 double ta = 1/1260;
-double Po = 0;
-double g; double z;         // Controller gain ki 
+double Po = 0; long long EN; long long DE; long long DE1; // for encoding and decoding 
+double g; double scale; //z;         // Controller gain ki 
 double alpha = 200;  // Roll off parameter alpha 
 double h ;    //  prefilter parameter z = ki/kp obtained from K = (g(s+z)/s)*(100/(s+100)) 
 // for PD controller double b1; double b0; double c1; double c0; double A;
@@ -85,20 +86,23 @@ int emergency = 1; //emergency stop feature is programmed in the robot 3 module 
 
 
 // Subscriber call back to /cmd_vel
-void twist_message_cmd(const geometry_msgs::Twist& msg)
+void twist_message_cmd(const std_msgs::Float64MultiArray& msg)
 {
-  vd = msg.linear.x  ;
-  wd = msg.angular.x ;
-  vdf = msg.linear.y  ;
-  wdf = msg.angular.y ;
-  g = msg.linear.z;
-  z = msg.angular.z;
-  Kp = g;
-  Kd = z;
-  A = Kp + Ki*td/2 + Kd/td; //((2*g*z) - (g*z*z/1260)) ;
-  B = -Kp + Ki*td/2 - 2*Kd/td; //g*z*z ;
-  C = Kd/td; //(g*sq(z/1260 - 1))*1260 ; 
-  Po = 0 ;
+  wdr = msg.data[0] ;
+  wdl = msg.data[1] ;
+  wR = msg.data[2];
+  wL = msg.data[3];
+  Po = msg.data[4];
+  EN = (long long)Po;
+  DE = EN%9901; DE1 = DE; Kp = (double)DE/100;
+  DE = (EN/9901)%9901; Ki = (double)DE/100;
+  DE = EN/9901; DE = DE/9901; Kd = (double)DE/10000;
+  
+   
+ A = Kp + Ki*td/2 + Kd/td; //((2*g*z) - (g*z*z/1260)) ;
+ B = -Kp + Ki*td/2 - 2*Kd/td; //g*z*z ;
+ C = Kd/td; //((2*g*z) - (g*z*z/1260)) ;
+
   //h = ki/kp;
 }
 
@@ -121,7 +125,7 @@ geometry_msgs::Twist rpm_msg ;
 ros::Publisher pub("arduino_vel", &rpm_msg);
 
 // Subscriber of the reference velocities coming from the outerloop
-ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &twist_message_cmd );
+ros::Subscriber<std_msgs::Float64MultiArray> sub("cmd_vel", &twist_message_cmd );
 ros::Subscriber<std_msgs::Int8> sub2("emergency_stop", &callBack );
 
 
@@ -146,7 +150,7 @@ md.init();
 
 void loop() {
  
-  if (millis() - Time > sample_time)
+  if (millis() - Time > 50)
     { 
       Time = millis() ;
 
@@ -186,14 +190,14 @@ void loop() {
 //Serial.println(left_ticks);
 }
 
-void publish_data(){  // currently not being used 
+void publish_data(){  // currently being used 
 
-  rpm_msg.linear.x = CR;//left_ticks;
-  rpm_msg.linear.y = CL;
-  rpm_msg.linear.z = PWMR;
-  rpm_msg.angular.x = PWML;
-  rpm_msg.angular.y = C;//wRn;//md.getM2CurrentMilliamps();
-  rpm_msg.angular.z = g;//md.getM1CurrentMilliamps();
+  rpm_msg.linear.x = DE1;
+  rpm_msg.linear.y = Po;
+  rpm_msg.linear.z = Kp;
+  rpm_msg.angular.x = Ki;
+  rpm_msg.angular.y = Kd;//wRn;//md.getM2CurrentMilliamps();
+  rpm_msg.angular.z = EN;//md.getM1CurrentMilliamps();
   pub.publish(&rpm_msg);
   //Serial.println(Time);*/
 
@@ -203,8 +207,8 @@ void publish_data(){  // currently not being used
 void Update_Motors(double vd, double wd)
 { 
   // Desired angular speed of two motors
-  wdr = (2*vd + Length*wd)/(2*Radius) ; // 2*vd - wd*L
-  wdl = (2*vd - Length*wd)/(2*Radius) ; // 2*vd + wd*L
+  //wdr = (2*vd + Length*wd)/(2*Radius) ; // 2*vd - wd*L
+  //wdl = (2*vd - Length*wd)/(2*Radius) ; // 2*vd + wd*L
 
   //Prefilter
   wrf = ( (td*h)*wdr + (td*h)*wdr_p - (td*h - 2)*wrf_p )/(2 + td*h);
@@ -217,8 +221,8 @@ void Update_Motors(double vd, double wd)
   
 
   // Present angular velocities
-  wR = (2*vdf + Length*wdf)/(2*Radius); 
-  wL = (2*vdf - Length*wdf)/(2*Radius); // rads/sec
+  //wR = (2*vdf + Length*wdf)/(2*Radius); 
+  //wL = (2*vdf - Length*wdf)/(2*Radius); // rads/sec
 
   wLn = (wL + wLp)/2.0;
   wRn = (wR + wRp)/2.0;
@@ -251,8 +255,8 @@ CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
 
   //Lk = min(max(Lk,0),350/B);
   //Rk = min(max(Rk,0),350/B);
-  Lk = max(Lk,abs(CL));
-  Rk = max(Rk,abs(CR));
+  //Lk = max(Lk,abs(CL));
+  //Rk = max(Rk,abs(CR));
   
   CL_pppp = CL_ppp;
   CL_ppp = CL_pp;
@@ -269,8 +273,8 @@ CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
   Rerror_pp = Rerror_p;
   Rerror_p = Rerror; 
   
-  PWMR = CR*400/102 ;//int(255.0*CR/5.15);  // CHANGE THIS !!
-  PWML = CL*400/102 ;//int(255.0*CL/5.15);  // CHANGE THIS !!
+  PWMR = CR*400 ;//int(255.0*CR/5.15);  // CHANGE THIS !!
+  PWML = CL*400 ;//int(255.0*CL/5.15);  // CHANGE THIS !!
 
   // Saturating input commands to right motor   
  if (PWMR>=400) 
@@ -292,8 +296,8 @@ CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
     PWML=0 ;
   }   
 
-  CL_p = CL;//PWML;
-  CR_p = CR;//PWMR;
+  CL_p = PWML;//PWML;
+  CR_p = PWMR;//PWMR;
   // Running the motors
   md.setM1Speed(-PWMR*emergency) ; // PWML 
   md.setM2Speed(-PWML*emergency) ; // PWMR

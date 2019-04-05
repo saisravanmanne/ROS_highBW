@@ -1,0 +1,4 @@
+It is observed that as I increase the number of digits beyong 0.000 i.e. 0.0001.. there is always a loss when I transmit the data via serial communication, what can be done? 
+1. use Mav link, to encrypt and decrypt the data
+2. reduce the bandwidth and check what happens
+
