@@ -15,7 +15,7 @@
 
 unsigned long Time=0; // Starting time
 unsigned long lastMilli = 0; 
-double td = 0.001; // T = 0.01 sec (100 hz)
+double td = 0.01; // T = 0.01 sec (100 hz)
 unsigned long sample_time= td*1000 ; 
 
 double wd ;    // Desired angular speed of COM about ICC(Instantaneous center of curvature)
@@ -67,15 +67,15 @@ double Rk = 0;
 double Lx = 0; // left - integrator anti-windup
 double Rx = 0; // right - integrator anti-windup
 
-int PWMR; // Controller output for right motor
-int PWML; // Controller output for left motor
+double PWMR; // Controller output for right motor
+double PWML; // Controller output for left motor
 
 double A ;          // Controller gain kp of K = (kp + ki/s) * (100/(s+100))
 double B ;          // Controller gain ki 
 double C ;          // Controller gain kp of K = (kp + ki/s) * (100/(s+100))
-double Kp = 0.5; double Ki; double Kd;
+double Kp = 0.5; double Ki; double Kd; long long EN; long long DE; long long DE1; 
 double ta = 1/1260;
-double Po = 0;
+double Po = 0; double scale;
 double g; double z;         // Controller gain ki 
 double alpha = 200;  // Roll off parameter alpha 
 double h ;    //  prefilter parameter z = ki/kp obtained from K = (g(s+z)/s)*(100/(s+100)) 
@@ -93,8 +93,12 @@ void twist_message_cmd(const geometry_msgs::Twist& msg)
   wdf = msg.angular.y ;
   g = msg.linear.z;
   z = msg.angular.z;
-  Kp = g;
-  Kd = z;
+  EN = (long long)g;
+  DE = EN%9901; Kp = (double)DE/100;
+  DE = EN/9901; Ki = (double)DE/100;
+  //DE = EN/9901; DE = DE/9901; Kd = (double)DE/10000;
+  Kd = z;//z;
+  scale = z;
   A = Kp + Ki*td/2 + Kd/td; //((2*g*z) - (g*z*z/1260)) ;
   B = -Kp + Ki*td/2 - 2*Kd/td; //g*z*z ;
   C = Kd/td; //(g*sq(z/1260 - 1))*1260 ; 
@@ -146,7 +150,7 @@ md.init();
 
 void loop() {
  
-  if (millis() - Time > sample_time)
+  if (millis() - Time > 1)
     { 
       Time = millis() ;
 
@@ -190,10 +194,10 @@ void publish_data(){  // currently not being used
 
   rpm_msg.linear.x = CR;//left_ticks;
   rpm_msg.linear.y = CL;
-  rpm_msg.linear.z = PWMR;
-  rpm_msg.angular.x = PWML;
-  rpm_msg.angular.y = C;//wRn;//md.getM2CurrentMilliamps();
-  rpm_msg.angular.z = g;//md.getM1CurrentMilliamps();
+  rpm_msg.linear.z = A;
+  rpm_msg.angular.x = B;
+  rpm_msg.angular.y = A*Lerror + B*Lerror_p + C*Lerror_pp;//wRn;//md.getM2CurrentMilliamps();
+  rpm_msg.angular.z = PWMR;//md.getM1CurrentMilliamps();
   pub.publish(&rpm_msg);
   //Serial.println(Time);*/
 
@@ -251,8 +255,8 @@ CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
 
   //Lk = min(max(Lk,0),350/B);
   //Rk = min(max(Rk,0),350/B);
-  Lk = max(Lk,abs(CL));
-  Rk = max(Rk,abs(CR));
+  //Lk = max(Lk,abs(CL));
+  //Rk = max(Rk,abs(CR));
   
   CL_pppp = CL_ppp;
   CL_ppp = CL_pp;
@@ -268,10 +272,17 @@ CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
   Rerror_ppp = Rerror_pp;
   Rerror_pp = Rerror_p;
   Rerror_p = Rerror; 
-  
-  PWMR = CR*400/102 ;//int(255.0*CR/5.15);  // CHANGE THIS !!
-  PWML = CL*400/102 ;//int(255.0*CL/5.15);  // CHANGE THIS !!
 
+  if (CR > 0)
+  PWMR = CR + 100 ;//int(255.0*CR/5.15);  // CHANGE THIS !!
+  else
+  PWMR = 0;
+  if (CL > 0)
+  PWML = CL + 100 ;//int(255.0*CL/5.15);  // CHANGE THIS !!
+  else 
+  PWML = 0;
+
+  
   // Saturating input commands to right motor   
  if (PWMR>=400) 
   {  
@@ -291,9 +302,14 @@ CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
   {
     PWML=0 ;
   }   
-
-  CL_p = CL;//PWML;
-  CR_p = CR;//PWMR;
+  if (PWML > 0)
+  CL_p = PWML - 100;//PWML;
+  else 
+  CL_p = PWML;
+  if (PWMR > 0)
+  CR_p = PWMR - 100;//PWMR;
+  else 
+  CR_p = PWMR;
   // Running the motors
   md.setM1Speed(-PWMR*emergency) ; // PWML 
   md.setM2Speed(-PWML*emergency) ; // PWMR

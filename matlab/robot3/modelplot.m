@@ -12,6 +12,7 @@ Kt = Kb;
 % Kb this is for back emf calculation 
 l1 = L1;
 l2 = L2; % size of the array
+td = 1/90;
 input_voltages = [11.87 11.39 11.09 10.70 10.10 9.09];
 killerKb = csv2table('data.csv',l1,l2);
 
@@ -21,15 +22,15 @@ ref_velocity = table2array(killerKb(:,6));
 ref_ang_velocity = table2array(killerKb(:,8));
 %% plot the step response
 figure;
-plot(l1:l2,velocity,'r');
-xlabel({'Time','in milli-seconds (ms)'})
-ylabel({'Angular Velocity (in rad/s) Linear Velocity (in m/s)'})
-title('Robot1 charateristics')
+plot((l1:l2)*td,velocity,'r');
+xlabel({'Time (s)'})
+ylabel({'Angular Velocity (in rad/s)'})
+title('Robot3 charateristics')
 hold on;
-plot(l1:l2,ang_velocity)
-plot(l1:l2,ref_velocity)
-plot(l1:l2,ref_ang_velocity)
-legend('Linear_velocity','Angular_velocity','Reference_Linear_Velocity','Reference_angular_velocity');
+plot((l1:l2)*td,ang_velocity,'g')
+plot((l1:l2)*td,-ref_velocity,'b')
+plot((l1:l2)*td,-ref_ang_velocity,'b')
+legend('AngVel Right','AngVel Left','Ref AngVel Right','Ref AngVel Left');
 
 
 
