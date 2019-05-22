@@ -15,8 +15,8 @@
 #include <iostream>
 #include <fstream>
 
-double Radius = 0.06; // Change it (radius of wheel) 0.045
-double Length = 0.36; // Change it (distance between 
+double Radius = 0.0610; // Change it (radius of wheel) 0.045
+double Length = 0.28; // Change it (distance between 
 int emergency = 0;
 
 class emergencyStop{       // stop the robot if any axes of the joystick is moved
@@ -66,14 +66,15 @@ class readData{
  	 wdr = (2*vdf + Length*wdf)/(2*Radius);    // actual angular velocities
 	 wdl = (2*vdf - Length*wdf)/(2*Radius);
          
-	 Rwdr = (-2*(msg->linear.x) - Length*(msg->angular.x))/(2*Radius);   // reference angular velocities
-	 Rwdl = (-2*(msg->linear.x) + Length*(msg->angular.x))/(2*Radius);	 
+	 Rwdr = (2*(msg->linear.x) + Length*(msg->angular.x))/(2*Radius);   // reference angular velocities
+	 Rwdl = (2*(msg->linear.x) - Length*(msg->angular.x))/(2*Radius);	 
 	
 	 std::ofstream myfile;
          ROS_INFO("printing data");
 	 myfile.open(filename.c_str(), std::ios::app);
          myfile << "Linear_velocity " << wdr << " Angular_velocity " << wdl;
-         myfile << " Ref_linear_velocity " << Rwdr << " Ref_angular_velocity " << Rwdl  << "\n";
+         myfile << " Ref_linear_velocity " << Rwdr << " Ref_angular_velocity " << Rwdl;
+         myfile << " Position_x " << msg->linear.z << " Position_y " << msg->angular.z << "\n";
 	 myfile.close(); 
 	 //return 0; 
 }
