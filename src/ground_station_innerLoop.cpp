@@ -14,9 +14,9 @@
 #include <iostream>
 #include <fstream>
 
-double Radius = 0.0610; // radius of the wheel in m
+double Radius = 0.0610; // radius of the wheel in mros
 double Length = 0.28; // distance between the rear wheels in m  
-int j_check = 0;
+int j_check = 0; 	
 int buffer_length = 50;
 std::deque<double> filterbuffer_v(buffer_length,0.0);
 std::deque<double> filterbuffer_w(buffer_length,0.0);
