@@ -3,6 +3,7 @@ close all
 clear all
 loop = 3; % 1 - PID design %2 Wr,Wl design %3 ICC Paper Plant 
 s = tf([1 0],[1]);
+z = tf('z');
 %% Plant Model 
 m = 2.96; mc = 2.96 - 0.279; I = 0.0285 ; Iw =   8.0306e-05; L = 0.28/2; R = 0.0610; d = 0.0; dw = 2*L; 
 Weq = 3.14/2; Veq = 1.2;
@@ -101,9 +102,10 @@ end
 
 if (loop == 3)
      P = Plant4;  plantzeros = tzero(Plant4); 
-     Kp = 20; Ki = 0.05; Kd = 17;
-     K = Kp + (Ki/s) + Kd*s;
-     Pcl = K*P/(1+K*P); step(Pcl)
+     Ts = 1/105; Kp = 17*12/400; Ki = 0.05/(Ts); 
+     K = Kp + Ki/s;
+     Po = 2.5/(s+2.5); P = (2.8766*(s + 0.1448))/((s + 0.5867)*(s + 0.1705));
+     Pcl = K*P/(1+K*P); step(Pcl);
      
      step(2.03*(s + 0.04751)/((s + 0.07006)*(s + 0.03627)))
 end 

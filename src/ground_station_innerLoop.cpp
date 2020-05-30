@@ -155,8 +155,8 @@ void readData::callBack2(const sensor_msgs::Joy::ConstPtr& joy){
 		inB = 1;
 	if (inB < -1)
   		inB = -1;
-	vel.linear.x = inA*200;//-(std::abs((joy->buttons[11]*400)) - ( - joy->buttons[9]*400));//-((joy->axes[1]*400)+(joy->axes[2]*400));
-	vel.angular.x = inA*150; //joy->buttons[8]*4.0 - joy->buttons[9]*4.0;//-(std::abs((joy->buttons[11]*400))+ joy->buttons[8]*400 ) ;//msg->axes[2]*1.5;
+	vel.linear.x = inA*300;//-(std::abs((joy->buttons[11]*400)) - ( - joy->buttons[9]*400));//-((joy->axes[1]*400)+(joy->axes[2]*400));
+	vel.angular.x = inA*250; //joy->buttons[8]*4.0 - joy->buttons[9]*4.0;//-(std::abs((joy->buttons[11]*400))+ joy->buttons[8]*400 ) ;//msg->axes[2]*1.5;
 	pub.publish(vel);   	
 }
 

@@ -14,7 +14,7 @@ l1 = L1;
 l2 = L2; % size of the array
 td = 1/90;
 input_voltages = [11.87 11.39 11.09 10.70 10.10 9.09];
-killerKb = csv2table('data2.csv',l1,l2);
+killerKb = csv2table('data.csv',l1,l2);
 
 velocity = table2array(killerKb(:,2));
 ang_velocity = table2array(killerKb(:,4));
