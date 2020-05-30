@@ -23,11 +23,14 @@
     <param name="~baudrate" value="57600"/>
     </node>  -->
  
-    <node pkg="joy" name="joy" type="joy_node">
-    </node>
+ 
+<node pkg="turtlesim" name="turtle_teleop_key" type="turtle_teleop_key">
+     <remap from="/turtle1/cmd_vel" to="keyboard"/>
+   </node>  
 
-   <node pkg="highBW" name="ground_station_innerLoop2" type="ground_station_innerLoop2">
+<node pkg="highBW" name="tesla1" type="tesla1">
    </node>
+
 
    <node pkg="highBW" name="ground_station_data_receive_Vive2" type="ground_station_data_receive_Vive2">
    </node>
@@ -41,3 +44,10 @@
    </node>   -->
 
 <!--<include file="$(find package_name)/directory/another.launch"/> -->
+
+
+<!--<node pkg="joy" name="joy" type="joy_node">
+    </node>    
+
+<node pkg="highBW" name="ground_station_innerLoop2" type="ground_station_innerLoop2">
+   </node> -->

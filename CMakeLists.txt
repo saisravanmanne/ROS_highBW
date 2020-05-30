@@ -29,4 +29,8 @@ add_executable(data_read2 src/robot_3_data_send.cpp)
 target_link_libraries(data_read2 ${catkin_LIBRARIES})
 add_dependencies(data_read2 highBW_generate_messages_cpp)
 
+add_executable(tesla1 src/tesla1.cpp)
+target_link_libraries(tesla1 ${catkin_LIBRARIES})
+add_dependencies(tesla1 highBW_generate_messages_cpp)
+
 # %EndTag(FULLTEXT)%
