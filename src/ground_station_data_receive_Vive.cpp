@@ -47,11 +47,11 @@ class readData{
 	 int i; double vdf; double wdf; double wdr; double wdl; double Rwdr; double Rwdl;
   	 ros::NodeHandle n;
 	 ros::Subscriber sub;
-         std::string filename = "/home/shravan/catkin_ws/src/highBW/matlab/robot3/data.csv";
+         std::string filename = "/home/shravan/catkin_ws/src/highBW/matlab/robot1/arduino.csv";
 };
 
 	readData::readData(){
-	sub = n.subscribe<geometry_msgs::Twist>("/cmd_vel", 1000, &readData::callBack,this); 
+	sub = n.subscribe<geometry_msgs::Twist>("arduino_vel", 10, &readData::callBack,this); 
  	i = 0; 	
  	}
 
@@ -61,20 +61,21 @@ class readData{
          
 
 	 void readData::dataWrite(const geometry_msgs::Twist::ConstPtr& msg){
-	 vdf = msg->linear.y;
-	 wdf = msg->angular.y;
- 	 wdr = (2*vdf + Length*wdf)/(2*Radius);    // actual angular velocities
-	 wdl = (2*vdf - Length*wdf)/(2*Radius);
+	 //vdf = msg->linear.y;
+	 //wdf = msg->angular.y;
+ 	 //wdr = (2*vdf + Length*wdf)/(2*Radius);    // actual angular velocities
+	 //wdl = (2*vdf - Length*wdf)/(2*Radius);
          
-	 Rwdr = (2*(msg->linear.x) + Length*(msg->angular.x))/(2*Radius);   // reference angular velocities
-	 Rwdl = (2*(msg->linear.x) - Length*(msg->angular.x))/(2*Radius);	 
+	 //Rwdr = (2*(msg->linear.x) + Length*(msg->angular.x))/(2*Radius);   // reference angular velocities
+	 //Rwdl = (2*(msg->linear.x) - Length*(msg->angular.x))/(2*Radius);	 
 	
+	 
 	 std::ofstream myfile;
          ROS_INFO("printing data");
 	 myfile.open(filename.c_str(), std::ios::app);
-         myfile << "Linear_velocity " << wdr << " Angular_velocity " << wdl;
-         myfile << " Ref_linear_velocity " << Rwdr << " Ref_angular_velocity " << Rwdl;
-         myfile << " Position_x " << msg->linear.z << " Position_y " << msg->angular.z << "\n";
+         myfile << " Left_RPM " << msg->linear.x << " Right_RPM " << msg->linear.y;
+         myfile << " sample_time " << msg->linear.z << " Servo_micro_sec " << msg->angular.x << "\n";
+//         myfile << " Position_x " << msg->linear.z << " Position_y " << msg->angular.z << "\n";
 	 myfile.close(); 
 	 //return 0; 
 }

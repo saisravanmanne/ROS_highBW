@@ -35,9 +35,9 @@ readData::readData(){
 
 void readData::callBack(const geometry_msgs::Twist::ConstPtr& msg){
 	vel.linear.x = msg->linear.x*(wr/2);
-	vel.angular.z = msg->angular.z*(-wl/2);
+	vel.angular.x = msg->angular.z*(-wl/2);
 	if (vel.linear.x < 0) vel.linear.x = 0;
-	if (vel.angular.z < 0) vel.angular.z = 0; 
+	if (vel.angular.x < 0) vel.angular.x = 0; 
 	pub.publish(vel);
 }
 
