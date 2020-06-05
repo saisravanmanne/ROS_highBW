@@ -15,8 +15,8 @@
 #include <iostream>
 #include <fstream>
 
-double Radius = 0.0610; // Change it (radius of wheel) 0.045
-double Length = 0.28; // Change it (distance between 
+double Radius = 0.038; // Change it (radius of wheel) 0.045
+double Length = 0.325; // Change it (distance between the wheels (dw) 
 int emergency = 0;
 
 class emergencyStop{       // stop the robot if any axes of the joystick is moved
@@ -47,7 +47,7 @@ class readData{
 	 int i; double vdf; double wdf; double wdr; double wdl; double Rwdr; double Rwdl;
   	 ros::NodeHandle n;
 	 ros::Subscriber sub;
-         std::string filename = "/home/shravan/catkin_ws/src/highBW/matlab/robot1/arduino.csv";
+         std::string filename = "/home/smanne1/catkin_ws/src/highBW/matlab/robot1/motor_output.csv";
 };
 
 	readData::readData(){
@@ -68,13 +68,16 @@ class readData{
          
 	 //Rwdr = (2*(msg->linear.x) + Length*(msg->angular.x))/(2*Radius);   // reference angular velocities
 	 //Rwdl = (2*(msg->linear.x) - Length*(msg->angular.x))/(2*Radius);	 
-	
-	 
+
+	 vdf = (msg->linear.x + msg->linear.y)*Radius/2;
+	 wdf = (msg->linear.x - msg->linear.y)*Radius/Length;
+
 	 std::ofstream myfile;
          ROS_INFO("printing data");
 	 myfile.open(filename.c_str(), std::ios::app);
-         myfile << " Left_RPM " << msg->linear.x << " Right_RPM " << msg->linear.y;
-         myfile << " sample_time " << msg->linear.z << " Servo_micro_sec " << msg->angular.x << "\n";
+         myfile << " Right_Angular_Vel " << msg->linear.x << " Left_Angular_Vel " << msg->linear.y;
+         myfile << " Time " << msg->linear.z << " Servo_micro_sec(INPUT) " << msg->angular.x;
+         myfile << " Linear_Velocity " << vdf << " Angular_Velocity " << wdf << "\n";
 //         myfile << " Position_x " << msg->linear.z << " Position_y " << msg->angular.z << "\n";
 	 myfile.close(); 
 	 //return 0; 

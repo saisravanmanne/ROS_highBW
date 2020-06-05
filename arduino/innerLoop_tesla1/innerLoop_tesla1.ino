@@ -13,11 +13,13 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
-Servo myservo;  // create servo object to control a servo
+Servo left;  // create servo object to control right motor
+Servo right; // create servo object to control left motor
+
 unsigned long Time=0; // Starting time
 unsigned long lastMilli = 0; 
-double td = 0.01; // T = 0.01 sec (100 hz)
-unsigned long sample_time= td*1000 ; 
+double td = 0.0095; // T = 0.01 sec (100 hz)
+unsigned long sample_time= td*1000*0.1 ; 
 
 double wd ;    // Desired angular speed of COM about ICC(Instantaneous center of curvature)
 double vd ;    // Desired longitudinal speed of center of mass
@@ -40,8 +42,8 @@ long Rcount_last=0;   // Previous encoder value
 double Radius = 0.06; // Change it (radius of wheel) 0.045
 double Length =0.36; // Change it (distance between wheels) 0.555 0.308
 
-double wdr;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}
-double wdl;       // Desired angular speed of left wheel using wd & vd  / prefilter parameter x_{n+1}
+double wdr = 0;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}
+double wdl = 0;       // Desired angular speed of left wheel using wd & vd  / prefilter parameter x_{n+1}
 double wdr_p=0;   // prefilter parameter x_{n} for right motor
 double wdl_p=0;   // prefilter parameter x_{n} for left motor
 double wrf;       // prefilter parameter y_{n+1} for right motor
@@ -84,7 +86,7 @@ double C ;          // Controller gain kp of K = (kp + ki/s) * (100/(s+100))
 double Kp = 0.5; double Ki; double Kd; long long EN; long long DE; long long DE1; 
 double ta = 1/1260;
 double Po = 0; double scale;
-double g; double z;         // Controller gain ki 
+double g = 1; double z;         // Controller gain ki 
 double alpha = 200;  // Roll off parameter alpha 
 double h ;    //  prefilter parameter z = ki/kp obtained from K = (g(s+z)/s)*(100/(s+100)) 
 // for PD controller double b1; double b0; double c1; double c0; double A;
@@ -93,11 +95,11 @@ double h ;    //  prefilter parameter z = ki/kp obtained from K = (g(s+z)/s)*(10
 // Subscriber call back to /cmd_vel
 void twist_message_cmd(const geometry_msgs::Twist& msg)
 {
-  vd = msg.linear.x  ;
-  wd = msg.angular.x ;
-  g = msg.linear.z;
-  z = msg.angular.z;
-
+  wdr = msg.linear.x  ;
+  wdl = wdr;
+  g = msg.angular.x ;
+  //g = msg.linear.z;
+  //z = msg.angular.z;
 }
 
 
@@ -191,20 +193,21 @@ void SetupEncoders()
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(57600); 
+  Serial.begin(115200); 
 
   // initialize the encoders
   SetupEncoders();
 
-  // attach servo to pin 51
-  myservo.attach(51);
+  // attach servo to pin 51,11
+  left.attach(51);
+  right.attach(43);
 
   // Arduino node
   arduino_nh.initNode() ;
 
   //broadcaster.init(arduino_nh) ; //added
     
-  arduino_nh.getHardware()->setBaud(57600);
+  arduino_nh.getHardware()->setBaud(115200);
   arduino_nh.advertise(pub); // setting up subscriptions
   arduino_nh.subscribe(sub); // setting up publications
 
@@ -219,7 +222,7 @@ void loop() {
       // Update Motors with corresponding speed and send speed values through serial port
 
      Update_Motors(vd, wd);
-     //publish_data();          
+     publish_data();          
      arduino_nh.spinOnce();
       
     }   
@@ -245,14 +248,14 @@ void Update_Motors(double vd, double wd)
   // Encoder counts
   Lcount = left_ticks ;
   Rcount = right_ticks ;
-  LdVal = (double) (Lcount - Lcount_last)/(td) ; // Counts per second // td not clear
-  RdVal = (double) (Rcount - Rcount_last)/(td) ; // Counts per second // td not clear
+  LdVal = (double) -(Rcount - Rcount_last)/(td) ; // Counts per second // simple interchagne to match notation
+  RdVal = (double) (Lcount - Lcount_last)/(td) ; // Counts per second // simple interchagne to match notation
   Lcount_last = Lcount;
   Rcount_last = Rcount;
 
   // Present angular velocities
-  wL = (LdVal/CPR)*60;//*(2*3.14159) ; // rads/sec
-  wR = (RdVal/CPR)*60;//*(2*3.14159) ; // rads/sec
+  wL = (LdVal/CPR)*(2*3.14159) ; // rads/sec
+  wR = (RdVal/CPR)*(2*3.14159) ; // rads/sec
 
   wLn = (wL + wLp)/2.0;  // avg with previous values to make it even smoother
   wRn = (wR + wRp)/2.0;
@@ -265,29 +268,12 @@ void Update_Motors(double vd, double wd)
   Lerror = wdl - wLn ; // error (ref - present)
 
   // Inner loop controller PID
-//Lx = CL_p*(3 + Po) + CL_pp*(-3 -3*Po) + CL_ppp*(1 + 3*Po); //+ CL_pppp*(-Po);
-//Rx = CR_p*(3 + Po) + CR_pp*(-3 -3*Po) + CR_ppp*(1 + 3*Po); //+ CR_pppp*(-Po);
-CL = CL_p + A*Lerror + B*Lerror_p + C*Lerror_pp;
-// = A*Lerror + B*(Lk) + C*(Lerror-Lerror_p);
-//= Lx - (Lerror_p*(A+C) + Lerror_pp*(-A*Po -A + B - 2*C) + Lerror_ppp*(A*Po - B*Po + C));  
-// 
-CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
-// = A*Rerror + B*(Rk) + C*(Rerror-Rerror_p); 
-//= Rx - (Rerror_p*(A+C) + Rerror_pp*(-A*Po -A + B - 2*C) + Rerror_ppp*(A*Po - B*Po + C));  
-//
 
-// PI controller no rolloff
-// CL = (CL_p + A*c1*Lerror + A*c0*Lerror_p);  
-// CR = (CR_p + A*c1*Rerror + A*c0*Rerror_p);
+CL = CL_p + 1.8*Lerror - 1.727*Lerror_p;
 
-  //Lk = Lk + Lerror; 
-  //Rk = Rk + Rerror;
+CR = CR_p + 1.8*Rerror - 1.727*Rerror_p;
 
-  //Lk = min(max(Lk,0),350/B);
-  //Rk = min(max(Rk,0),350/B);
-  //Lk = max(Lk,abs(CL));
-  //Rk = max(Rk,abs(CR));
-  
+
   CL_pppp = CL_ppp;
   CL_ppp = CL_pp;
   CL_pp = CL_p;
@@ -303,46 +289,39 @@ CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
   Rerror_pp = Rerror_p;
   Rerror_p = Rerror; 
 
-  if (CR > 0)
-  PWMR = CR + 100 ;//int(255.0*CR/5.15);  // CHANGE THIS !!
-  else
-  PWMR = 0;
-  if (CL > 0)
-  PWML = CL + 100 ;//int(255.0*CL/5.15);  // CHANGE THIS !!
-  else 
-  PWML = 0;
+  if (CL < 0) CL = 0;
+  if (CL > 80) CL = 80;
+  if (CR < 0) CL = 0;
+  if (CR > 80) CL = 80;
 
+  CL = CL_p;
+  CR = CR_p;
+
+  CL = CL + 1570;
+  CR = CR + 1570;
+  left.writeMicroseconds(CL);
+  right.writeMicroseconds(CR);
   
-  // Saturating input commands to right motor   
- if (PWMR>=400) 
-  {  
-    PWMR=400;
-  } 
-  else if (PWMR<=0) 
-  {
-    PWMR=0 ;
-  }
   
-  // Saturating input commands to left motor
-  if (PWML>=400) 
-  {
-    PWML=400 ;
-  }
-  else if (PWML<=0) 
-  {
-    PWML=0 ;
-  }   
-  if (PWML > 0)
-  CL_p = PWML - 100;//PWML;
-  else 
-  CL_p = PWML;
-  if (PWMR > 0)
-  CR_p = PWMR - 100;//PWMR;
-  else 
-  CR_p = PWMR;
-  // Running the motors
- 
-  for(int i=640;i<2060;i++){ 
+  
+}
+
+void publish_data(){
+  
+  rpm_msg.linear.x = wRn;//rigt_angularVelocity;
+  rpm_msg.linear.y = wLn;//right_angularVelocity;
+  rpm_msg.linear.z = Time;
+  rpm_msg.angular.x = vd;
+  rpm_msg.angular.y = wdr;
+  rpm_msg.angular.z = 0;
+  pub.publish(&rpm_msg);
+  //Serial.println(Time);
+
+}
+
+
+/*
+ for(int i=640;i<2060;i++){ 
     myservo.writeMicroseconds(i);
     val = i;
     delay(15);
@@ -386,19 +365,5 @@ CR = CR_p + A*Rerror + B*Rerror_p + C*Rerror_pp;
   wLp = wL; // saving present angular velocities to be used in the next loop
   wRp  = wR; // saving present angular velocities to be used in the next loop
     publish_data();
-  }
-  
-}
-
-void publish_data(){
-  
-  rpm_msg.linear.x = wL;//left_ticks;
-  rpm_msg.linear.y = wR;//right_ticks;
-  rpm_msg.linear.z = sample_time;
-  rpm_msg.angular.x = val;
-  rpm_msg.angular.y = 0;
-  rpm_msg.angular.z = 0;
-  pub.publish(&rpm_msg);
-  //Serial.println(Time);
-
-}
+  } 
+ */

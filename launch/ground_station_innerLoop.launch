@@ -15,12 +15,12 @@
             <!-- <rosparam param="ignore_nodes">['/robot_0/amcl','/robot_0/diff_tf_joystick','/robot_0/    		    map_server','/robot_0/rplidarNode','/robot_0/base_link_to_laser','/robot_0/joy_node
 	    ','/robot_0/rosserial_lipo'] </rosparam> -->
             # Sync just selected topics 
-            <rosparam param="sync_topics"> ['/cmd_vel','/tracker_2'] </rosparam> 
+            <rosparam param="sync_topics"> ['/cmd_vel','/arduino_vel'] </rosparam> 
     </node>
   
 <node pkg="rosserial_arduino" name="serial" type="serial_node.py">
     <param name="~port" value="/dev/ttyACM0"/>
-    <param name="~baudrate" value="57600"/>
+    <param name="~baudrate" value="115200"/>
   </node>  
  
  
