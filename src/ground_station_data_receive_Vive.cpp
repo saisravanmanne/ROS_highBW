@@ -47,7 +47,7 @@ class readData{
 	 int i; double vdf; double wdf; double wdr; double wdl; double Rwdr; double Rwdl;
   	 ros::NodeHandle n;
 	 ros::Subscriber sub;
-         std::string filename = "/home/smanne1/catkin_ws/src/highBW/matlab/robot1/motor_output.csv";
+         std::string filename = "/home/smanne1/catkin_ws/src/highBW/matlab/robot1/arduino.csv";
 };
 
 	readData::readData(){
@@ -76,8 +76,8 @@ class readData{
          ROS_INFO("printing data");
 	 myfile.open(filename.c_str(), std::ios::app);
          myfile << " Right_Angular_Vel " << msg->linear.x << " Left_Angular_Vel " << msg->linear.y;
-         myfile << " Time " << msg->linear.z << " Servo_micro_sec(INPUT) " << msg->angular.x;
-         myfile << " Linear_Velocity " << vdf << " Angular_Velocity " << wdf << "\n";
+         myfile << " Time " << msg->linear.z << " Ref_Right " << msg->angular.x;
+         myfile << " Ref_Left " << msg->angular.y << "\n";
 //         myfile << " Position_x " << msg->linear.z << " Position_y " << msg->angular.z << "\n";
 	 myfile.close(); 
 	 //return 0; 

@@ -42,8 +42,8 @@ long Rcount_last=0;   // Previous encoder value
 double Radius = 0.06; // Change it (radius of wheel) 0.045
 double Length =0.36; // Change it (distance between wheels) 0.555 0.308
 
-double wdr = 0;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}
-double wdl = 0;       // Desired angular speed of left wheel using wd & vd  / prefilter parameter x_{n+1}
+double wdr = 28.3;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}
+double wdl = 28.3;       // Desired angular speed of left wheel using wd & vd  / prefilter parameter x_{n+1}
 double wdr_p=0;   // prefilter parameter x_{n} for right motor
 double wdl_p=0;   // prefilter parameter x_{n} for left motor
 double wrf;       // prefilter parameter y_{n+1} for right motor
@@ -97,7 +97,8 @@ void twist_message_cmd(const geometry_msgs::Twist& msg)
 {
   wdr = msg.linear.x  ;
   wdl = wdr;
-  g = msg.angular.x ;
+  if (wdr == 0) g = 0;
+  else g = 1;
   //g = msg.linear.z;
   //z = msg.angular.z;
 }
@@ -232,10 +233,7 @@ void loop() {
 // UPDATE MOTORS
 void Update_Motors(double vd, double wd)
 { 
-  // Desired angular speed of two motors
-  wdr = (2*vd + Length*wd)/(2*Radius) ; // 2*vd - wd*L
-  wdl = (2*vd - Length*wd)/(2*Radius) ; // 2*vd + wd*L
-
+  
   //Prefilter
   wrf = ( (td*h)*wdr + (td*h)*wdr_p - (td*h - 2)*wrf_p )/(2 + td*h);
   wlf = ( (td*h)*wdl + (td*h)*wdl_p - (td*h - 2)*wlf_p )/(2 + td*h);
@@ -269,9 +267,9 @@ void Update_Motors(double vd, double wd)
 
   // Inner loop controller PID
 
-CL = CL_p + 1.8*Lerror - 1.727*Lerror_p;
+CL = CL_p + 7.07*Lerror - 6.885*Lerror_p;
 
-CR = CR_p + 1.8*Rerror - 1.727*Rerror_p;
+CR = CR_p + 7.07*Rerror - 6.885*Rerror_p;
 
 
   CL_pppp = CL_ppp;
@@ -290,29 +288,29 @@ CR = CR_p + 1.8*Rerror - 1.727*Rerror_p;
   Rerror_p = Rerror; 
 
   if (CL < 0) CL = 0;
-  if (CL > 80) CL = 80;
-  if (CR < 0) CL = 0;
-  if (CR > 80) CL = 80;
+  if (CL > 100) CL = 100;
+  if (CR < 0) CR = 0;
+  if (CR > 100) CR = 100;
 
-  CL = CL_p;
-  CR = CR_p;
+  CL_p = CL;
+  CR_p = CR;
 
   CL = CL + 1570;
   CR = CR + 1570;
-  left.writeMicroseconds(CL);
-  right.writeMicroseconds(CR);
-  
+  left.writeMicroseconds(CL*g);
+  delay(100);
+  right.writeMicroseconds(CR*g);
   
   
 }
 
 void publish_data(){
   
-  rpm_msg.linear.x = wRn;//rigt_angularVelocity;
-  rpm_msg.linear.y = wLn;//right_angularVelocity;
-  rpm_msg.linear.z = Time;
-  rpm_msg.angular.x = vd;
-  rpm_msg.angular.y = wdr;
+  rpm_msg.linear.x = CL;//rigt_angularVelocity;
+  rpm_msg.linear.y = CR;//right_angularVelocity;
+  rpm_msg.linear.z =  Time;
+  rpm_msg.angular.x = wdr;
+  rpm_msg.angular.y = wdl;
   rpm_msg.angular.z = 0;
   pub.publish(&rpm_msg);
   //Serial.println(Time);

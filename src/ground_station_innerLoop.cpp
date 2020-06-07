@@ -28,9 +28,9 @@ class readData{
 	 ros::NodeHandle n;
 	 ros::Publisher pub;
 	 ros::Subscriber sub;
-	 ros::Subscriber sub2;
+	 //ros::Subscriber sub2;
 	 void callBack(const geometry_msgs::Point::ConstPtr& msg);
-	 void callBack2(const sensor_msgs::Joy::ConstPtr& msg);
+	 void callBack2(const geometry_msgs::Twist::ConstPtr& key);
 	 geometry_msgs::Twist vel;
 	 geometry_msgs::Point pre_msg;
 	 double time;
@@ -45,7 +45,7 @@ class readData{
 readData::readData(){
 	sub = n.subscribe<geometry_msgs::Point>("/tracker_2", 1, &readData::callBack,this);
 	pub = n.advertise<geometry_msgs::Twist>("cmd_vel",1);
-	sub2 = n.subscribe<sensor_msgs::Joy>("/joy", 1, &readData::callBack2,this); 
+	//sub2 = n.subscribe<geometry_msgs::Twist>("/keyboard",10, &readData::callBack,this); 
 	Kp = 724;  Ki = 2403; Kd = 0.05467;   // in arduino they are divided by 100 , 100, 10000
 
 	}
@@ -120,8 +120,9 @@ void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
 		//pub.publish(vel);		
 
 
-		if ((msg->z*pre_msg.z)>0)
-		{  		
+		//if ((msg->z*pre_msg.z)>0)    // this conditions is require when the range of theta is from -pi to pi and it's absolute. Now it's
+                                               // relative to the starting value i.e. it keeps increasing or decreasing from the starting value.  
+		//{  		
 		time = ros::Time::now().toSec();
 		vel.angular.y = (msg->z - pre_msg.z)/(time - pre_time2);
 		filterbuffer_w.push_front(vel.angular.y);
@@ -138,26 +139,14 @@ void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
 		vel.linear.z = msg->x;
                 vel.angular.z = msg->y; 
 		pub.publish(vel);
-		}	
-		else {
-		pre_msg.z = msg->z;		
-		}
+		//}	
+		//else {
+		//pre_msg.z = msg->z;		
+		//}
 }
 
-void readData::callBack2(const sensor_msgs::Joy::ConstPtr& joy){
-	inA = joy->buttons[9]+joy->buttons[11];
-	inB = joy->buttons[7]+joy->buttons[9];		
-	if (inA > 1)
-		inA =1;
-	if (inA < -1)
-		inA = -1;
-	if (inB > 1)
-		inB = 1;
-	if (inB < -1)
-  		inB = -1;
-	vel.linear.x = inA*300;//-(std::abs((joy->buttons[11]*400)) - ( - joy->buttons[9]*400));//-((joy->axes[1]*400)+(joy->axes[2]*400));
-	vel.angular.x = inA*250; //joy->buttons[8]*4.0 - joy->buttons[9]*4.0;//-(std::abs((joy->buttons[11]*400))+ joy->buttons[8]*400 ) ;//msg->axes[2]*1.5;
-	pub.publish(vel);   	
+void readData::callBack2(const geometry_msgs::Twist::ConstPtr& key){
+	 	
 }
 
 int main(int argc, char **argv)
@@ -269,9 +258,20 @@ void readData::callBack(const geometry_msgs::Point::ConstPtr& msg){
 }
 
 void readData::callBack2(const sensor_msgs::Joy::ConstPtr& joy){
-	vel.linear.x = std::abs((joy->buttons[11]*1.5));//-((joy->axes[1]*400)+(joy->axes[2]*400));
-	vel.angular.x = joy->buttons[8]*4.1 - joy->buttons[9]*4.1 ;//-(-(joy->axes[2]*400)+(joy->axes[1]*400));//msg->axes[2]*1.5;
-	pub.publish(vel);   	
+        inA = joy->buttons[9]+joy->buttons[11];
+	inB = joy->buttons[7]+joy->buttons[9];		
+	if (inA > 1)
+		inA =1;
+	if (inA < -1)
+		inA = -1;
+	if (inB > 1)
+		inB = 1;
+	if (inB < -1)
+  		inB = -1;
+	vel.linear.x = inA*300;//-(std::abs((joy->buttons[11]*400)) - ( - joy->buttons[9]*400));//-((joy->axes[1]*400)+(joy->axes[2]*400));
+	vel.angular.x = inA*250; //joy->buttons[8]*4.0 - joy->buttons[9]*4.0;//-(std::abs((joy->buttons[11]*400))+ joy->buttons[8]*400 ) ;//msg->axes[2]*1.5;
+	pub.publish(vel);  
+	  	
 }
 
 int main(int argc, char **argv)

@@ -1,7 +1,7 @@
 function platoon = modelplot(L1,L2)
 %% constant decleration
 clc
-
+close all 
 
 ra1 = 4.641; % right motor
 ra2 = 3.934; % left motor
@@ -14,10 +14,11 @@ l1 = L1;
 l2 = L2; % size of the array
 td = 1/90;
 input_voltages = [11.87 11.39 11.09 10.70 10.10 9.09];
-killerKb = csv2table('mexp_1630_1640_1650.csv',l1,l2);
+killerKb = csv2table('arduino.csv',l1,l2);
 
 right = table2array(killerKb(:,2));
 left = table2array(killerKb(:,4));
+[v,w] = fKin(right,left);
 time = table2array(killerKb(:,6));
 servo = table2array(killerKb(:,8));
 linear_vel = table2array(killerKb(:,10));
@@ -25,14 +26,14 @@ angular_vel = table2array(killerKb(:,12));
 
 %% plot the step response
 figure; 
-plot(time,right,time,left,time,servo./100);
+plot(time,right,time,servo);
 grid on;
 xlabel({'time (microsec)'})
 ylabel({'Wheel Angular Velocity'})
 title('MotorShit')
 legend('right','left');
 figure;
-plot(time, linear_vel, time, angular_vel,time,servo./1000);
+plot(time, left, time, servo);
 grid on;
 xlabel({'time (microsec)'});
 ylabel({'linear & angular vel'});
