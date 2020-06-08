@@ -4,6 +4,7 @@ project(highBW)
 ## Find catkin and any catkin packages
 find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs geometry_msgs sensor_msgs tf)
 
+
 ## Declare ROS messages and services
 ##add_message_files(FILES Num.msg)
 ##add_service_files(FILES AddTwoInts.srv)
@@ -32,5 +33,9 @@ add_dependencies(data_read2 highBW_generate_messages_cpp)
 add_executable(tesla1 src/tesla1.cpp)
 target_link_libraries(tesla1 ${catkin_LIBRARIES})
 add_dependencies(tesla1 highBW_generate_messages_cpp)
+
+add_executable(Cruise src/Cruise.cpp)
+target_link_libraries(Cruise ${catkin_LIBRARIES})
+add_dependencies(Cruise highBW_generate_messages_cpp)
 
 # %EndTag(FULLTEXT)%

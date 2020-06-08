@@ -3,6 +3,7 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Int8.h"
 #include "std_msgs/Float64.h"
+#include "std_msgs/Float64MultiArray.h"
 #include <cmath>
 #include <tf/tf.h>
 #include<geometry_msgs/Vector3.h>
@@ -42,25 +43,30 @@ class readData{
 	 readData();   
 	private:        // emergency stop feature programmed in the robot3 module incase of high current
 	 void callBack(const geometry_msgs::Twist::ConstPtr& msg);
+	 void callBack2(const std_msgs::Float64MultiArray::ConstPtr& msg);
 	 void dataWrite(const geometry_msgs::Twist::ConstPtr& msg);
 	 geometry_msgs::Twist vel;
+	 std::string filename = "/home/smanne1/catkin_ws/src/highBW/matlab/robot1/arduino.csv";
+	 std::string filename2 = "/home/smanne1/catkin_ws/src/highBW/matlab/robot1/cruiseData.csv";
 	 int i; double vdf; double wdf; double wdr; double wdl; double Rwdr; double Rwdl;
   	 ros::NodeHandle n;
 	 ros::Subscriber sub;
-         std::string filename = "/home/smanne1/catkin_ws/src/highBW/matlab/robot1/arduino.csv";
+	 ros::Subscriber sub2;
+         
 };
 
 	readData::readData(){
 	sub = n.subscribe<geometry_msgs::Twist>("arduino_vel", 10, &readData::callBack,this); 
+        sub2 = n.subscribe<std_msgs::Float64MultiArray>("exp_dataRecord", 10000, &readData::callBack2,this);
  	i = 0; 	
  	}
 
-	void readData::callBack(const geometry_msgs::Twist::ConstPtr& msg){
+void readData::callBack(const geometry_msgs::Twist::ConstPtr& msg){
 	dataWrite(msg);
-	 }	 
+}	 
          
 
-	 void readData::dataWrite(const geometry_msgs::Twist::ConstPtr& msg){
+void readData::dataWrite(const geometry_msgs::Twist::ConstPtr& msg){
 	 //vdf = msg->linear.y;
 	 //wdf = msg->angular.y;
  	 //wdr = (2*vdf + Length*wdf)/(2*Radius);    // actual angular velocities
@@ -82,6 +88,19 @@ class readData{
 	 myfile.close(); 
 	 //return 0; 
 }
+
+void readData::callBack2(const std_msgs::Float64MultiArray::ConstPtr& msg){
+	 std::ofstream myfile2;
+         ROS_INFO("printing data");
+	 myfile2.open(filename2.c_str(), std::ios::app);
+         myfile2 << " Position_x " << msg->data[0] << " Position_y " << msg->data[1];
+         myfile2 << " Theta " << msg->data[2] << " Linear_Velocity " << msg->data[3];
+         myfile2 << " Angular_Velocity " << msg->data[4] << " Time " << msg->data[5];
+         myfile2 << " Theta_Ref " << msg->data[6] << " V_ref " << msg->data[7] << "\n";
+//         myfile << " Position_x " << msg->linear.z << " Position_y " << msg->angular.z << "\n";
+	 myfile2.close(); 
+}
+
 
 int main(int argc, char **argv)
 {

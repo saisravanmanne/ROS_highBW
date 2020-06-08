@@ -31,50 +31,50 @@ double wLp=0.0; // previous angular speed left motor
 double wLn;     // average angular speed (wL + wLp)/2  
 double wRn;     // average angular speed (wR + wRp)/2
 
-double CPR = 1024; // encoder counts per revolution
-double LdVal = 0; 
-double RdVal = 0; 
+double CPR = 1024.0; // encoder counts per revolution
+double LdVal = 0.0; 
+double RdVal = 0.0; 
 long Lcount; // Present Encoder value
 long Rcount; // Present Encoder value    
 long Lcount_last=0; // Previous encoder value
 long Rcount_last=0;   // Previous encoder value
 
 double Radius = 0.06; // Change it (radius of wheel) 0.045
-double Length =0.36; // Change it (distance between wheels) 0.555 0.308
+double Length = 0.36; // Change it (distance between wheels) 0.555 0.308
 
 double wdr = 28.3;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}
 double wdl = 28.3;       // Desired angular speed of left wheel using wd & vd  / prefilter parameter x_{n+1}
-double wdr_p=0;   // prefilter parameter x_{n} for right motor
-double wdl_p=0;   // prefilter parameter x_{n} for left motor
+double wdr_p= 0.0;   // prefilter parameter x_{n} for right motor
+double wdl_p= 0.0;   // prefilter parameter x_{n} for left motor
 double wrf;       // prefilter parameter y_{n+1} for right motor
 double wlf;       // prefilter parameter y_{n+1} for left motor
-double wrf_p=0;   // prefilter paramter y_{n} for right motor
-double wlf_p=0;   // prefilter parameter y_{n} for left motor'
+double wrf_p= 0.0;   // prefilter paramter y_{n} for right motor
+double wlf_p= 0.0;   // prefilter parameter y_{n} for left motor'
 
 double CR;       // Controller output y_{n+2} Right motor
-double CR_p=0;   // Controller output y_{n+1} Right motor
-double CR_pp=0;  // Controller output y_{n}   Right motor
-double CR_ppp=0;
-double CR_pppp=0;
+double CR_p=0.0;   // Controller output y_{n+1} Right motor
+double CR_pp=0.0;  // Controller output y_{n}   Right motor
+double CR_ppp=0.0;
+double CR_pppp=0.0;
 double CL;       // Controller output y_{n+2} Left motor
-double CL_p=0;   // Controller output y_{n+1} Left motor
-double CL_pp=0;  // Controller output y_{n}   Left motor
-double CL_ppp=0;
-double CL_pppp=0;
+double CL_p=0.0;   // Controller output y_{n+1} Left motor
+double CL_pp=0.0;  // Controller output y_{n}   Left motor
+double CL_ppp=0.0;
+double CL_pppp=0.0;
 
 double Lerror;   // Lerror = wlf(output of prefilter/ reference speed) - wLn.....or... Controller input x_{n+2}
-double Lerror_p = 0; // Controller input x_{n+1}
-double Lerror_pp = 0; // Controller input x_{n}
-double Lerror_ppp = 0;
-double Lk = 0;
+double Lerror_p = 0.0; // Controller input x_{n+1}
+double Lerror_pp = 0.0; // Controller input x_{n}
+double Lerror_ppp = 0.0;
+double Lk = 0.0;
 double Rerror;   // Rerror = wrf(output of prefilter/ reference speed) - wRn....or.....Controller input x_{n+2}
-double Rerror_p = 0; // Controller input x_{n+1}
-double Rerror_pp = 0; // Controller input x_{n}
-double Rerror_ppp = 0;
-double Rk = 0;
+double Rerror_p = 0.0; // Controller input x_{n+1}
+double Rerror_pp = 0.0; // Controller input x_{n}
+double Rerror_ppp = 0.0;
+double Rk = 0.0;
 
-double Lx = 0; // left - integrator anti-windup
-double Rx = 0; // right - integrator anti-windup
+double Lx = 0.0; // left - integrator anti-windup
+double Rx = 0.0; // right - integrator anti-windup
 
 double PWMR; // Controller output for right motor
 double PWML; // Controller output for left motor
@@ -85,9 +85,9 @@ double B ;          // Controller gain ki
 double C ;          // Controller gain kp of K = (kp + ki/s) * (100/(s+100))
 double Kp = 0.5; double Ki; double Kd; long long EN; long long DE; long long DE1; 
 double ta = 1/1260;
-double Po = 0; double scale;
-double g = 1; double z;         // Controller gain ki 
-double alpha = 200;  // Roll off parameter alpha 
+double Po = 0.0; double scale;
+double g = 1.0; double z;         // Controller gain ki 
+double alpha = 200.0;  // Roll off parameter alpha 
 double h ;    //  prefilter parameter z = ki/kp obtained from K = (g(s+z)/s)*(100/(s+100)) 
 // for PD controller double b1; double b0; double c1; double c0; double A;
 
@@ -97,8 +97,8 @@ void twist_message_cmd(const geometry_msgs::Twist& msg)
 {
   wdr = msg.linear.x  ;
   wdl = wdr;
-  if (wdr == 0) g = 0;
-  else g = 1;
+  if (wdr == 0) g = 0.0;
+  else g = 1.0;
   //g = msg.linear.z;
   //z = msg.angular.z;
 }
