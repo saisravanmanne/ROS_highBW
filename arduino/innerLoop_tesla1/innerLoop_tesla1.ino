@@ -42,8 +42,8 @@ long Rcount_last=0;   // Previous encoder value
 double Radius = 0.06; // Change it (radius of wheel) 0.045
 double Length = 0.36; // Change it (distance between wheels) 0.555 0.308
 
-double wdr = 28.3;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}
-double wdl = 28.3;       // Desired angular speed of left wheel using wd & vd  / prefilter parameter x_{n+1}
+double wdr = 0;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}
+double wdl = 0;       // Desired angular speed of left wheel using wd & vd  / prefilter parameter x_{n+1}
 double wdr_p= 0.0;   // prefilter parameter x_{n} for right motor
 double wdl_p= 0.0;   // prefilter parameter x_{n} for left motor
 double wrf;       // prefilter parameter y_{n+1} for right motor
@@ -96,7 +96,7 @@ double h ;    //  prefilter parameter z = ki/kp obtained from K = (g(s+z)/s)*(10
 void twist_message_cmd(const geometry_msgs::Twist& msg)
 {
   wdr = msg.linear.x  ;
-  wdl = wdr;
+  wdl = msg.angular.x ;
   if (wdr == 0) g = 0.0;
   else g = 1.0;
   //g = msg.linear.z;
@@ -298,7 +298,6 @@ CR = CR_p + 7.07*Rerror - 6.885*Rerror_p;
   CL = CL + 1570;
   CR = CR + 1570;
   left.writeMicroseconds(CL*g);
-  delay(100);
   right.writeMicroseconds(CR*g);
   
   
@@ -306,12 +305,12 @@ CR = CR_p + 7.07*Rerror - 6.885*Rerror_p;
 
 void publish_data(){
   
-  rpm_msg.linear.x = CL;//rigt_angularVelocity;
-  rpm_msg.linear.y = CR;//right_angularVelocity;
+  rpm_msg.linear.x = wRn;//rigt_angularVelocity;
+  rpm_msg.linear.y = wLn;//right_angularVelocity;
   rpm_msg.linear.z =  Time;
-  rpm_msg.angular.x = wdr;
-  rpm_msg.angular.y = wdl;
-  rpm_msg.angular.z = 0;
+  rpm_msg.angular.x = CL;
+  rpm_msg.angular.y = CR;
+  rpm_msg.angular.z = g;
   pub.publish(&rpm_msg);
   //Serial.println(Time);
 

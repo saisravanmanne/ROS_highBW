@@ -27,18 +27,18 @@
 
 
 
-<!-- <node pkg="rosserial_arduino" name="serial" type="serial_node.py">
+ <!-- <node pkg="rosserial_arduino" name="serial" type="serial_node.py">
     <param name="~port" value="/dev/ttyACM0"/>
     <param name="~baudrate" value="115200"/>
-  </node> --> 
+  </node>  -->
 
  
 <node pkg="turtlesim" name="turtle_teleop_key" type="turtle_teleop_key">
      <remap from="/turtle1/cmd_vel" to="keyboard"/>
    </node>  
 
-<node pkg="highBW" name="tesla1" type="tesla1">
-   </node>                                   <!-- deactivate this node when running outerloop functions -->          
+<!-- <node pkg="highBW" name="tesla1" type="tesla1">
+   </node> -->                                   <!-- deactivate this node when running outerloop functions -->          
 
 
 <node pkg="highBW" name="ground_station_innerLoop2" type="ground_station_innerLoop2">
@@ -47,8 +47,8 @@
 <node pkg="highBW" name="ground_station_data_receive_Vive2" type="ground_station_data_receive_Vive2">
    </node>
 
-<!-- <node pkg="highBW" name="Cruise" type="Cruise">
-   </node> -->
+<node pkg="highBW" name="Cruise" type="Cruise">
+   </node> 
 
  </launch>
 

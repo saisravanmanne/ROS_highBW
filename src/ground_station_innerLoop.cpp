@@ -34,8 +34,8 @@ class readData{
 	 std_msgs::Float64MultiArray exp_dataRecord;
 	 double time; double expTime = 0.0; 
 	 double ts = 1.0/105.0;
-	 double pre_time2;
-	 double pre_time;
+	 double pre_time2 = 0.0;
+	 double pre_time = 0.0;
 	 double inA; double inB;
 	 double yaw = 0.0;  // this is absolute yaw angle 
 };
@@ -46,7 +46,7 @@ readData::readData(){
 	sub = n.subscribe<std_msgs::Float64MultiArray>("exp_data", 10000, &readData::callBack,this);
 	pub = n.advertise<std_msgs::Float64MultiArray>("exp_dataRecord",10000);
 	//sub2 = n.subscribe<geometry_msgs::Twist>("/keyboard",10, &readData::callBack,this); 
-
+	pre_msg.x = 0.0; pre_msg.y = 0.0; pre_msg.z = 0.0;
 	}
 
 void readData::callBack(const std_msgs::Float64MultiArray::ConstPtr& msg){
@@ -157,7 +157,7 @@ void readData::callBack(const std_msgs::Float64MultiArray::ConstPtr& msg){
 		vel.angular.y = 0;
 		
 		
-		exp_dataRecord.data = {msg->data[0], msg->data[1], msg->data[2], vel.linear.y, vel.angular.y, expTime, msg->data[3], msg->data[4]};
+		exp_dataRecord.data = {msg->data[0], msg->data[1], msg->data[2], -vel.linear.y, vel.angular.y, expTime, msg->data[3], msg->data[4]};
 		expTime = expTime + ts;		 
 
 		pub.publish(exp_dataRecord);

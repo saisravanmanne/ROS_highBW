@@ -26,7 +26,7 @@ angular_vel = table2array(killerKb(:,12));
 
 %% plot the step response
 figure; 
-plot(time,right,time,servo);
+plot(time,right,time,left);
 grid on;
 xlabel({'time (microsec)'})
 ylabel({'Wheel Angular Velocity'})

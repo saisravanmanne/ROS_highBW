@@ -16,6 +16,9 @@
 #include <iostream>
 #include <fstream>
 
+double Radius = 0.038; 
+double Length = 0.325;
+
 class readData{
     public:
 	readData();
@@ -31,8 +34,9 @@ class readData{
     	double wr; double wl; // for now the values are going to be in micro seconds to test the rpm of the motor and log the data
 	int cruise = 0; int initial = 0; 
 	double x_i; double y_i; double theta_i; double x_f; double y_f; double theta_f; 
-	double v_ref; double theta_ref; std::string line; std::string sV_ref; std::string sTheta_ref;
-	std::ifstream ifile {"/home/smanne1/catkin_ws/src/highBW/src/Cruise.csv"}; 
+	double v_ref; double w_ref; double theta_ref; double theta_err; double k_theta = 5;
+	std::string line; std::string sV_ref; std::string sTheta_ref;
+	std::ifstream ifile {"/home/smanne1/catkin_ws/src/highBW/src/Cruise2.csv"}; 
 };
 
 readData::readData(){
@@ -71,13 +75,14 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 			v_ref = std::stod(sV_ref);
 			theta_ref = std::stod(sTheta_ref);
 		}
-
-// outerloop code goes here
-
 		
-		wr = v_ref;
-		wl = theta_ref;
-	
+		// outerloop code 
+		theta_err = theta_ref - theta_f;
+		w_ref = k_theta * theta_err;
+		
+		wr = (2*v_ref + Length*w_ref)/(2*Radius);    
+	        wl = (2*v_ref - Length*w_ref)/(2*Radius);
+					
 		vel.linear.x = wr;
 		vel.angular.x = wl;
 		pub.publish(vel);   // cmd_vel to the inner loop

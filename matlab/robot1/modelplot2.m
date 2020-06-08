@@ -21,7 +21,7 @@ position_y = table2array(killerKb(:,4));
 theta = table2array(killerKb(:,6));
 linear_vel = table2array(killerKb(:,8));
 angular_vel = table2array(killerKb(:,10));
-time = table2array(killerKb(:,12))/1000;
+time = table2array(killerKb(:,12));
 Theta_ref = table2array(killerKb(:,14));
 V_ref = table2array(killerKb(:,16));
 %% plot the step response
