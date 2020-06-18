@@ -14,7 +14,7 @@ l1 = L1;
 l2 = L2; % size of the array
 td = 1/90;
 input_voltages = [11.87 11.39 11.09 10.70 10.10 9.09];
-killerKb = csv2table('arduino.csv',l1,l2);
+killerKb = csv2table('mexp_1630_1640_1650.csv',l1,l2);
 
 right = table2array(killerKb(:,2));
 left = table2array(killerKb(:,4));
@@ -26,14 +26,14 @@ angular_vel = table2array(killerKb(:,12));
 
 %% plot the step response
 figure; 
-plot(time,right,time,left);
+plot(time/1000,right,time/1000,servo/100);
 grid on;
 xlabel({'time (microsec)'})
 ylabel({'Wheel Angular Velocity'})
 title('MotorShit')
 legend('right','left');
 figure;
-plot(time, left, time, servo);
+plot(time/1000, left, time/1000, servo/100);
 grid on;
 xlabel({'time (microsec)'});
 ylabel({'linear & angular vel'});

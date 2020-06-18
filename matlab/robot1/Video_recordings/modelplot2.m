@@ -14,7 +14,7 @@ l1 = L1;
 l2 = L2; % size of the array
 td = 1/90;
 input_voltages = [11.87 11.39 11.09 10.70 10.10 9.09];
-killerKb = csv2table('cruiseData.csv',l1,l2);
+killerKb = csv2table('cruiseData_2_1.csv',l1,l2);
 
 position_x = table2array(killerKb(:,2));
 position_y = table2array(killerKb(:,4));
@@ -26,14 +26,14 @@ Theta_ref = table2array(killerKb(:,14));
 V_ref = table2array(killerKb(:,16));
 %% plot the step response
 figure; 
-plot(time,Theta_ref,time, V_ref);
+plot(time,linear_vel,time,angular_vel);
 grid on;
 xlabel({'time'})
 ylabel({'Wheel Angular Velocity'})
 title('MotorShit')
 legend('linear_vel','angular_vel');
 figure;
-plot(time,theta);
+plot(position_x,position_y);
 grid on;
 xlabel({'time'});
 ylabel({'linear & angular vel'});

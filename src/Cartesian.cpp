@@ -30,13 +30,15 @@ class readData{
 	ros::Subscriber sub2; // subscribe to tracker_1: x,y,theta
     	void callBack(const geometry_msgs::Twist::ConstPtr& msg);  // subscribe to the keyboard
 	void callBack2(const geometry_msgs::Point::ConstPtr& msg); // subscribe to the tracker_1
+	double fcn(double xp,double yp);  // to compute the theta_err (refer matlab Cartesian code)
 	geometry_msgs::Twist vel; std_msgs::Float64MultiArray expData;
     	double wr; double wl; // for now the values are going to be in micro seconds to test the rpm of the motor and log the data
 	int cruise = 0; int initial = 0; 
 	double x_i; double y_i; double theta_i; double x_f; double y_f; double theta_f; 
-	double v_ref; double w_ref; double theta_ref; double theta_err; double k_theta = 5.0;
-	std::string line; std::string sV_ref; std::string sTheta_ref;
-	std::ifstream ifile {"/home/smanne1/catkin_ws/src/highBW/src/Cruise4.csv"}; 
+	double v_ref; double w_ref; double theta_ref; double x_ref; double y_ref; double d_err; double theta_err; double k_theta = 5.0; double k_v = 5.0;
+	double xp; double yp; // used by function 'fcn'
+        std::string line; std::string sX_ref; std::string sY_ref;
+	std::ifstream ifile {"/home/smanne1/catkin_ws/src/highBW/src/Cartesian1.csv"}; 
 };
 
 readData::readData(){
@@ -62,22 +64,28 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 			theta_i = msg->z;
 			initial = 1;
 		}
-		x_f = (msg->x - x_i)*cos(theta_i) + (msg->y - y_i)*sin(theta_i) + 0.0;   // add the starting value of the robot instead of 500
-		y_f = -(msg->x - x_i)*sin(theta_i) + (msg->y - y_i)*cos(theta_i) + 0.0;
+		x_f = (msg->x - x_i)*cos(theta_i) + (msg->y - y_i)*sin(theta_i) + 500.0;   // add the starting value of the robot instead of 500
+		y_f = -(msg->x - x_i)*sin(theta_i) + (msg->y - y_i)*cos(theta_i) + 500.0;
 		theta_f = msg->z - theta_i;
 		
    		if (std::getline(ifile, line)) { // read the current line
 			std::istringstream iss{line}; // construct a string stream from line
-			std::getline(iss, sTheta_ref, ',');
-			std::getline(iss, sV_ref,',');
+			std::getline(iss, sX_ref, ',');
+			std::getline(iss, sY_ref,',');
 			
 			//ROS_INFO("%s\n", sV_ref.c_str());
-			v_ref = std::stod(sV_ref);
-			theta_ref = std::stod(sTheta_ref);
+			x_ref = std::stod(sX_ref);
+			y_ref = std::stod(sY_ref);
 		}
 		
 		// outerloop code 
-		theta_err = theta_ref - theta_f;
+		xp = x_ref - x_f;
+		yp = y_ref - y_f; 
+		
+		theta_ref = fcn(xp, yp);
+		theta_err = theta_ref - theta_f; 
+
+		v_ref = sqrt(pow(xp,2) + pow(yp,2))*cos(theta_ref)*k_v;		
 		w_ref = k_theta * theta_err;
 		
 		wr = (2*v_ref + Length*w_ref)/(2*Radius);    
@@ -87,7 +95,7 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 		vel.angular.x = wl;
 		pub.publish(vel);   // cmd_vel to the inner loop
 	
-		expData.data = { x_f, y_f, theta_f, v_ref, theta_ref};  
+		expData.data = { x_f, y_f, theta_f, v_ref, w_ref};  
 		pub2.publish(expData); 
 		
 	}
@@ -103,8 +111,70 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 
 }
 
+double readData::fcn(double xp, double yp){
+	static double xo = 1.0, yo = 0.0, theta = 0.0;
+	double a1,b1,c1,dtheta,sign;
+
+// calculate the value of theta
+	a1 = sqrt( pow(xp,2) + pow(yp,2));
+	b1 = sqrt( pow(xo,2) + pow(yo,2));
+	c1 = sqrt( pow(xp - xo, 2) + pow(yp - yo ,2));
+		
+	if ((a1 != 0) && (b1 != 0))
+		dtheta = acos(std::max(std::min( (pow(a1,2) + pow(b1,2) - pow(c1,2))/(2*a1*b1) ,1.0),-1.0));
+	else	
+		dtheta = 0.0;	
+
+// calculate the direction of rotation
+	sign = 1.0;
+	if (dtheta != 0){
+		sign = (-yo/xo)*xp + yp;
+		if (sign != 0){
+			if ((xo > 0) && (yo > 0)) 
+				sign = sign/std::abs(sign);        		
+			else if ((xo < 0) && (yo < 0))
+                		sign = -sign/std::abs(sign);
+        		else if ((xo > 0) && (yo < 0))
+                		sign = sign/std::abs(sign);
+        		else if ((xo < 0) && (yo > 0))
+                 		sign = -sign/std::abs(sign);
+        		else if ((xo == 0) && (yo >= 0)){
+            			if (xp != 0)
+                			sign = -xp/std::abs(xp);
+            			else
+                			sign = 0;
+            			}
+        		else if ((xo == 0) && (yo <= 0)){
+            			if (xp != 0)
+                			sign = xp/std::abs(xp);
+            			else
+                			sign = 0;
+            			}
+        		else if ((xo >= 0)&&(yo == 0)){
+            			if (yp != 0)
+                			sign = yp/std::abs(yp);
+            			else
+                			sign = 0;
+            			}
+       			else if ((xo <= 0) && (yo == 0)){
+            			if (yp != 0)
+                			sign = -yp/std::abs(yp);
+            			else
+                			sign = 0;
+           			}
+        	}
+    	}
+						
+	xo = xp; yo = yp; 
+	theta = theta + dtheta*sign;	
+	return theta;
+	
+}
+
+
+
 int main(int argc, char **argv){
-	ros::init(argc, argv, "Cruise");
+	ros::init(argc, argv, "Cartesian");
 
 	//TeleopJoy teleop_turtle;
 	readData dude;

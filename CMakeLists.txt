@@ -38,4 +38,8 @@ add_executable(Cruise src/Cruise.cpp)
 target_link_libraries(Cruise ${catkin_LIBRARIES})
 add_dependencies(Cruise highBW_generate_messages_cpp)
 
+add_executable(Cartesian src/Cartesian.cpp)
+target_link_libraries(Cartesian ${catkin_LIBRARIES})
+add_dependencies(Cartesian highBW_generate_messages_cpp)
+
 # %EndTag(FULLTEXT)%

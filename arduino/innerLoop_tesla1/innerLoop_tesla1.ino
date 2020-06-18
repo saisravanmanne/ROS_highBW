@@ -39,7 +39,7 @@ long Rcount; // Present Encoder value
 long Lcount_last=0; // Previous encoder value
 long Rcount_last=0;   // Previous encoder value
 
-double Radius = 0.06; // Change it (radius of wheel) 0.045
+double Radius = 0.04; // Change it (radius of wheel) 0.045
 double Length = 0.36; // Change it (distance between wheels) 0.555 0.308
 
 double wdr = 0;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}

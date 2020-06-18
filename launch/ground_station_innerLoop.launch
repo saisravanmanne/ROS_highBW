@@ -47,7 +47,10 @@
 <node pkg="highBW" name="ground_station_data_receive_Vive2" type="ground_station_data_receive_Vive2">
    </node>
 
-<node pkg="highBW" name="Cruise" type="Cruise">
+<!--<node pkg="highBW" name="Cruise" type="Cruise">
+   </node> -->
+
+<node pkg="highBW" name="Cartesian" type="Cartesian">
    </node> 
 
  </launch>
