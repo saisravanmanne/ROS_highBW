@@ -38,7 +38,7 @@
    </node>  
 
 <!-- <node pkg="highBW" name="tesla1" type="tesla1">
-   </node> -->                                   <!-- deactivate this node when running outerloop functions -->          
+   </node>  -->                                 <!-- deactivate this node when running outerloop functions -->          
 
 
 <node pkg="highBW" name="ground_station_innerLoop2" type="ground_station_innerLoop2">
@@ -47,7 +47,7 @@
 <node pkg="highBW" name="ground_station_data_receive_Vive2" type="ground_station_data_receive_Vive2">
    </node>
 
-<!--<node pkg="highBW" name="Cruise" type="Cruise">
+<!-- <node pkg="highBW" name="Cruise" type="Cruise">
    </node> -->
 
 <node pkg="highBW" name="Cartesian" type="Cartesian">

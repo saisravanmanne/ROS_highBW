@@ -14,7 +14,7 @@ l1 = L1;
 l2 = L2; % size of the array
 td = 1/90;
 input_voltages = [11.87 11.39 11.09 10.70 10.10 9.09];
-killerKb = csv2table('cruiseData_2_1.csv',l1,l2);
+killerKb = csv2table('cruiseData_4_3.csv',l1,l2);
 
 position_x = table2array(killerKb(:,2));
 position_y = table2array(killerKb(:,4));

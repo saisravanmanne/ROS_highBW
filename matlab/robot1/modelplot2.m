@@ -1,7 +1,7 @@
 function platoon = modelplot2(L1,L2)
 %% constant decleration
 clc
-close all 
+%close all 
 
 ra1 = 4.641; % right motor
 ra2 = 3.934; % left motor
@@ -26,14 +26,14 @@ Theta_ref = table2array(killerKb(:,14));
 V_ref = table2array(killerKb(:,16));
 %% plot the step response
 figure; 
-plot(time,Theta_ref,time, V_ref);
+plot(position_x,position_y);
 grid on;
 xlabel({'time'})
 ylabel({'Wheel Angular Velocity'})
 title('MotorShit')
 legend('linear_vel','angular_vel');
 figure;
-plot(time,theta);
+plot(time,V_ref);
 grid on;
 xlabel({'time'});
 ylabel({'linear & angular vel'});

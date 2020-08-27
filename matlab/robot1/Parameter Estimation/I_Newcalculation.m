@@ -1,0 +1,78 @@
+function [I] = I_Newcalculation(d,Iw,L,md,dw)
+% I as a function of d, dw
+% range of d is -0.03 to 0.03
+ m = 6.8; 
+ mc = 4.17; % mass without motors
+ mw = (m - mc)*0.5 ; % mass of individual motor and wheel
+ %dw = 0.25*167; 
+ % the Li-ion battery, camera and the Lipo battery are shifted to match the
+ % new d value, so no new mass is being added md = 0 always
+%% Iw estimation  (max and min value estimation)
+
+ %rw =  0.0385 ; m_wheel = 0.051;
+ %rm = 0.032  ; m_motor = 1.262;
+ %maxval = 0.5*m_motor*rm*rm + 0.5*m_wheel*rw*rw;    
+ %minval =  maxval/8;
+
+%% Ic calculation
+% 
+% plate
+Ic = md*(L/2)^2; % initial value, md is the additional mass that has to be added to manipulate d, 
+m_plate = 0.69;
+
+
+Ic = Ic + (2/12)*m_plate*(L*L + dw*dw) + 2*m_plate*d*d;   % for the two acryllic sheets
+% 3d print
+% m3d = 0.055;
+% l3d = 0.079;
+% Ic = Ic + 2*m3d*l3d*l3d;
+% Nvidia
+m_nvidia = 0.4;
+l_nvidia =  0.032; %0.12*dw;
+Ic = Ic + m_nvidia*((l_nvidia^2) + (d^2)); 
+m_bat = 0.492;
+m_lipo = 0.378;
+m_cam = 0.187; % motor driver
+db = d*mc/(m_bat + m_cam + m_lipo);
+
+% battery
+m_bat = 0.494;
+l = 0.180;
+w = 0.110;
+Ic = Ic + (1/12)*m_bat*(l*l + w*w) + m_bat*(db - d)*(db - d);
+
+% motor driver
+m_cam = 0.187;
+l_cam = 0.145; % distance from d = 0;
+l = 0.075;
+w = 0.080; 
+Ic = Ic + (2/12)*m_cam*(l*l + w*w) + 2*m_cam*l_cam*l_cam;
+
+% LiPo
+m_lipo = 0.378;
+l_lipo = 0.082;  % distance from d = 0; 
+l = 0.137;
+w = 0.047;
+Ic = Ic + 2*m_lipo*l_lipo*l_lipo + (2/12)*m_lipo*(l*l + w*w);
+
+% Castor 
+m_castor = 0.059
+l_castor = 0.195;
+Ic = Ic + 2*m_castor*(l_castor)^2;  % almost negligible
+
+% arduino + motor shield 
+m_ard_shield = 0.062;
+L_ard_shield = 0.086; % disctance from d = 0; 
+Ic = Ic + m_ard_shield*(L_ard_shield)^2; % doesn't really matter
+%% I approximation
+
+I_approx = (1/12)*m*(L*L + dw*dw); % in order to verify if the calculated I is right or wrong
+%% I original
+
+% Iw = wheel+motor moment of inertia about wheel axel
+I = Ic + (mc+md)*d*d + 2*mw*dw*dw + Iw;
+
+
+end
+
+

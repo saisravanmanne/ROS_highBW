@@ -36,7 +36,7 @@ class readData{
 	double x_i; double y_i; double theta_i; double x_f; double y_f; double theta_f; 
 	double v_ref; double w_ref; double theta_ref; double theta_err; double k_theta = 5.0;
 	std::string line; std::string sV_ref; std::string sTheta_ref;
-	std::ifstream ifile {"/home/smanne1/catkin_ws/src/highBW/src/Cruise4.csv"}; 
+	std::ifstream ifile {"/home/smanne1/catkin_ws/src/highBW/src/Cruise_05r.csv"}; 
 };
 
 readData::readData(){
@@ -85,6 +85,7 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 					
 		vel.linear.x = wr;
 		vel.angular.x = wl;
+		vel.linear.z = 1;
 		pub.publish(vel);   // cmd_vel to the inner loop
 	
 		expData.data = { x_f, y_f, theta_f, v_ref, theta_ref};  
@@ -94,6 +95,7 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 	else {
 		wr = 0.0; 
 		wl = 0.0;
+		vel.linear.z = 0;
 		vel.linear.x = wr;
 		vel.angular.x = wl;
 		pub.publish(vel);   // cmd_vel to the inner loop

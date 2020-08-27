@@ -35,10 +35,10 @@ class readData{
     	double wr; double wl; // for now the values are going to be in micro seconds to test the rpm of the motor and log the data
 	int cruise = 0; int initial = 0; 
 	double x_i; double y_i; double theta_i; double x_f; double y_f; double theta_f; 
-	double v_ref; double w_ref; double theta_ref; double x_ref; double y_ref; double d_err; double theta_err; double k_theta = 5.0; double k_v = 5.0;
+	double v_ref; double w_ref; double theta_ref; double x_ref; double y_ref; double d_err; double theta_err; double k_theta = 6.0; double k_v = 1.0;
 	double xp; double yp; // used by function 'fcn'
         std::string line; std::string sX_ref; std::string sY_ref;
-	std::ifstream ifile {"/home/smanne1/catkin_ws/src/highBW/src/Cartesian1.csv"}; 
+	std::ifstream ifile {"/home/smanne1/catkin_ws/src/highBW/src/Cartesian_BW.csv"}; 
 };
 
 readData::readData(){
@@ -65,7 +65,7 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 			initial = 1;
 		}
 		x_f = (msg->x - x_i)*cos(theta_i) + (msg->y - y_i)*sin(theta_i) + 500.0;   // add the starting value of the robot instead of 500
-		y_f = -(msg->x - x_i)*sin(theta_i) + (msg->y - y_i)*cos(theta_i) + 500.0;
+		y_f = -(msg->x - x_i)*sin(theta_i) + (msg->y - y_i)*cos(theta_i) + 501.5;
 		theta_f = msg->z - theta_i;
 		
    		if (std::getline(ifile, line)) { // read the current line
@@ -85,7 +85,7 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 		theta_ref = fcn(xp, yp);
 		theta_err = theta_ref - theta_f; 
 
-		v_ref = sqrt(pow(xp,2) + pow(yp,2))*cos(theta_ref)*k_v;		
+		v_ref = sqrt(pow(xp,2) + pow(yp,2))*cos(theta_err)*k_v;		
 		w_ref = k_theta * theta_err;
 		
 		wr = (2*v_ref + Length*w_ref)/(2*Radius);    
@@ -93,15 +93,17 @@ void readData::callBack2(const geometry_msgs::Point::ConstPtr& msg){
 					
 		vel.linear.x = wr;
 		vel.angular.x = wl;
+		vel.linear.z = 1;		
 		pub.publish(vel);   // cmd_vel to the inner loop
 	
-		expData.data = { x_f, y_f, theta_f, v_ref, w_ref};  
+		expData.data = { x_f, y_f, theta_f, x_ref, y_ref};  
 		pub2.publish(expData); 
 		
 	}
 	else {
 		wr = 0.0; 
 		wl = 0.0;
+		vel.linear.z = 0;
 		vel.linear.x = wr;
 		vel.angular.x = wl;
 		pub.publish(vel);   // cmd_vel to the inner loop

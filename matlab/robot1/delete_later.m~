@@ -5,8 +5,7 @@ z = tf('z');
 ts = 1/105;
 P1 = 1.65/(s + 1.67);
 
-P2 = 3.310/(s + 7.14); % from PWM to Wr,l - use this for inner-loop design
-P21 = 33.89/(s + 7.14); % from Volt to Wr,l
+P2 = 3.310/(s + 7.14);
 C2 = 7.07 + 19.4/s;
 C3 = 22.9 + 99.5/s;
 C4 = 2.65 + 26/s
@@ -23,9 +22,8 @@ Iw = 6.8394e-04; % default values //\\ has to be chosen based on the correspondi
 I = I_Newcalculation(d,Iw,L,md,dw);
 %[max,min] = Imaxmin(d,Iw,L,md,dw);
 Plant1 = Plantww(d, Veq, Weq, dw, Iw, I, L, md,R);
-hold on;
-step(Plant1(1,1))
-step(P21)
+stepinfo(Plant1(1,1))
+stepinfo(3.310/(s + 7.14))
 
 
 

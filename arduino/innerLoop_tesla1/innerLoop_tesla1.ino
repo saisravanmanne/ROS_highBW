@@ -40,7 +40,7 @@ long Lcount_last=0; // Previous encoder value
 long Rcount_last=0;   // Previous encoder value
 
 double Radius = 0.04; // Change it (radius of wheel) 0.045
-double Length = 0.36; // Change it (distance between wheels) 0.555 0.308
+double Length = 0.32; // Change it (distance between wheels) 0.555 0.308
 
 double wdr = 0;       // Desired angular speed of right wheel using wd & vd /  prefilter parameter x_{n+1}
 double wdl = 0;       // Desired angular speed of left wheel using wd & vd  / prefilter parameter x_{n+1}
@@ -97,9 +97,10 @@ void twist_message_cmd(const geometry_msgs::Twist& msg)
 {
   wdr = msg.linear.x  ;
   wdl = msg.angular.x ;
-  if (wdr == 0) g = 0.0;
-  else g = 1.0;
-  //g = msg.linear.z;
+  //wdl = wdr;
+  //if (wdr == 0) g = 0.0;
+  //else g = 1.0;
+  g = msg.linear.z;
   //z = msg.angular.z;
 }
 
@@ -267,9 +268,9 @@ void Update_Motors(double vd, double wd)
 
   // Inner loop controller PID
 
-CL = CL_p + 7.07*Lerror - 6.885*Lerror_p;
+CL = CL_p + 0.259*Lerror - 0.2166*Lerror_p;
 
-CR = CR_p + 7.07*Rerror - 6.885*Rerror_p;
+CR = CR_p + 0.259*Rerror - 0.2166*Rerror_p;
 
 
   CL_pppp = CL_ppp;

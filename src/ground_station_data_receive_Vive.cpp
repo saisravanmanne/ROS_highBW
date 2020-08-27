@@ -96,7 +96,7 @@ void readData::callBack2(const std_msgs::Float64MultiArray::ConstPtr& msg){
          myfile2 << " Position_x " << msg->data[0] << " Position_y " << msg->data[1];
          myfile2 << " Theta " << msg->data[2] << " Linear_Velocity " << msg->data[3];
          myfile2 << " Angular_Velocity " << msg->data[4] << " Time " << msg->data[5];
-         myfile2 << " X_Ref " << msg->data[6] << " Y_ref " << msg->data[7] << "\n";
+         myfile2 << " X_ref " << msg->data[6] << " Y_ref " << msg->data[7] << "\n";
 //         myfile << " Position_x " << msg->linear.z << " Position_y " << msg->angular.z << "\n";
 	 myfile2.close(); 
 }
