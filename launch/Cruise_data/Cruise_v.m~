@@ -16,16 +16,13 @@ load('waypoint.mat')
 x3 = Cartesian(:,1)-500;
 y3 = Cartesian(:,2)-501.5;
 
+h = animatedline;
 
-axis([-3 3 -3 3])
 for k = 1:length(x2)
-    plot(x2(1:k),y2(1:k),'b'); grid on;
-    axis([-3 3 -3 3])
-    pause(0.001);
-   
+    plot(x3(),y3);
     %addpoints(h,x1(k),y1(k));
-    %addpoints(h,x2(k),y2(k));
-    %drawnow
+    addpoints(h,x2(k),y2(k));
+    drawnow
     
 end
 
